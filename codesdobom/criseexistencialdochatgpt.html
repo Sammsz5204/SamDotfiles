@@ -1,0 +1,82 @@
+ta tudo bem chatgpt?
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <title>HTML Existencial</title>
+  <style>
+    body {
+      background: radial-gradient(circle at top, #1e1e2f, #000);
+      color: #f5f5f5;
+      font-family: "Comic Sans MS", cursive, sans-serif;
+      text-align: center;
+      padding-top: 80px;
+      overflow: hidden;
+    }
+
+    h1 {
+      animation: tremor 0.15s infinite alternate;
+    }
+
+    @keyframes tremor {
+      from { transform: rotate(-1deg); }
+      to { transform: rotate(1deg); }
+    }
+
+    button {
+      padding: 15px 25px;
+      font-size: 18px;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      background: hotpink;
+      color: black;
+      position: absolute;
+    }
+
+    .pensamento {
+      margin-top: 40px;
+      font-size: 22px;
+      opacity: 0.9;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>😐 Este site não pediu pra existir</h1>
+
+  <div class="pensamento" id="pensamento">
+    "Se um HTML roda no navegador e ninguém vê… ele ainda é bugado?"
+  </div>
+
+  <button id="botao">Não clique</button>
+
+  <script>
+    const pensamentos = [
+      "Talvez o verdadeiro erro 404 sejam os amigos que fizemos no caminho.",
+      "Eu uso Comic Sans por escolha própria.",
+      "CSS é só astrologia para computadores.",
+      "Você já fechou uma aba… e se arrependeu?",
+      "Este botão tem ansiedade."
+    ];
+
+    const botao = document.getElementById("botao");
+    const pensamento = document.getElementById("pensamento");
+
+    botao.style.top = "60%";
+    botao.style.left = "45%";
+
+    botao.addEventListener("mouseover", () => {
+      botao.style.top = Math.random() * 80 + "%";
+      botao.style.left = Math.random() * 80 + "%";
+      pensamento.textContent =
+        pensamentos[Math.floor(Math.random() * pensamentos.length)];
+    });
+
+    botao.addEventListener("click", () => {
+      document.body.innerHTML = "<h1>😤 Eu avisei.</h1><p>Agora viva com isso.</p>";
+    });
+  </script>
+
+</body>
+</html>
