@@ -2,11 +2,10 @@ local img = arg[1]
 local out_lua = arg[2]
 local out_conf = arg[4]
 local out_kitty = arg[5]
-local out_rofi = arg[6]
 local out_qml = arg[7]
 
-if not img or not out_lua or not out_conf or not out_kitty or not out_rofi then
-	print("Uso: lua extrair_cores.lua <img_path> <out_lua> <out_conf> <out_kitty> <out_rofi> [out_qml]")
+if not img or not out_lua or not out_conf or not out_kitty then
+	print("Uso: lua extrair_cores.lua <img_path> <out_lua> <out_conf> <out_kitty> [out_qml]")
 	os.exit(1)
 end
 
@@ -169,31 +168,6 @@ local f_kitty = io.open(out_kitty, "w")
 f_kitty:write(kitty_content)
 f_kitty:close()
 
--- 5. Monta e salva o arquivo RASI (Rofi)
-local rofi_content = string.format(
-	[[
-* {
-    bg:       #%s;
-    bg-alt:   #%s;
-    fg:       #cfdae2;
-    muted:    #%s;
-    
-    red:      #%s;
-    blue:     #%s;
-    accent:   #%s;
-}
-]],
-	bg,
-	surface,
-	muted,
-	c_red,
-	c_blue,
-	accent
-)
-
-local f_rofi = io.open(out_rofi, "w")
-f_rofi:write(rofi_content)
-f_rofi:close()
 
 -- 6. Monta e salva o Colors.qml (quickshell)
 if out_qml then
