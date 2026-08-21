@@ -2,7 +2,7 @@
 
 Personal dotfiles for my Arch Linux + Hyprland setup.
 
-This repository contains the configuration I actually use on my desktop, with a focus on a clean Wayland workflow, dynamic theming, custom UI components, and a frankly unreasonable amount of time spent making tiny things look nicer.
+This repository contains the configuration I actually use on my desktop, with a focus on a clean Wayland workflow, dynamic theming, custom UI components, and a frankly unreasonable amount of time spent making tiny things look nicer:) It lwk makes my head hurt more than when i'm thinking on an way to get coal into tf burner to generate electricity without blocking any of my machines on factorio. This complete revamp took a bit of time, but only god knows how it worked.
 
 > **Current UI stack:** Quickshell
 >
@@ -88,7 +88,7 @@ Generated palette
 Hyprland + Quickshell + other configs
 ```
 
-Because apparently choosing colors manually became too primitive.
+Because choosing colors manually became too primitive. JKAKBAKSBDKAJJ
 
 ## 🚀 Installation
 
@@ -106,15 +106,6 @@ Run the installer:
 ```bash
 ./scripts/install.sh
 ```
-
-The installer can:
-
-- install the required Arch packages
-- back up existing configuration directories
-- link the dotfiles into `~/.config`
-- install the included fonts
-- update the font cache
-- initialize the wallpaper/theme setup
 
 ### Manual setup
 
@@ -137,7 +128,7 @@ ln -s "$PWD/quickshell" ~/.config/quickshell
 
 ## 📸 Screenshots
 
-Screenshots will be added here as the rice stops changing every five minutes.
+Screenshots will be added here as the rice stops changing every five minutes. :)
 
 ## 🛠️ Philosophy
 
