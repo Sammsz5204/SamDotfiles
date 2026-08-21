@@ -55,7 +55,7 @@ Item {
             anchors.left: parent.left
             anchors.verticalCenter: parent.verticalCenter
             font.family: "JetBrainsMono Nerd Font"
-            font.pixelSize: 15
+            font.pixelSize: 17
             color: isExpanded ? Colors.fg : Colors.muted
 
             Behavior on color { ColorAnimation { duration: 150; easing.type: Easing.OutCubic } }

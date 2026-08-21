@@ -164,8 +164,7 @@ PanelWindow {
         }
     }
 
-    // Popup associado diretamente a esta barra.
-    // Assim não é necessário passar uma referência pelo shell.qml.
+
     SystemPanelPopup {
         id: systemPanel
 

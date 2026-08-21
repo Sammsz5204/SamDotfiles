@@ -36,7 +36,7 @@ RowLayout {
                 : (mouseArea.containsMouse || isPressed ? Colors.surface : "transparent")
 
             opacity: entered ? 1 : 0
-            scale: entered ? 1 : 0.65
+            scale: entered ? 1 : 0.45
 
             Behavior on radius {
                 NumberAnimation { duration: 250; easing.type: Easing.OutCubic }
@@ -75,7 +75,7 @@ RowLayout {
                     to: 1
                     duration: 420
                     easing.type: Easing.OutBack
-                    easing.overshoot: 1.6
+                    easing.overshoot: 1.5
                 }
             }
 
@@ -94,9 +94,9 @@ RowLayout {
                     target: wsBtn
                     property: "scale"
                     to: 1.08
-                    duration: 100
+                    duration: 150
                     easing.type: Easing.OutBack
-                    easing.overshoot: 2.0
+                    easing.overshoot: 1
                 }
 
                 NumberAnimation {
@@ -124,7 +124,7 @@ RowLayout {
                 : wsBtn.modelData.name
 
                 font.family: "JetBrainsMono Nerd Font"
-                font.pixelSize: 14
+                font.pixelSize: 16
 
                 color: wsBtn.isFocused
                     ? Colors.bg
