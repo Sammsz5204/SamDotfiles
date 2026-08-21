@@ -79,9 +79,9 @@ Item {
 
     SequentialAnimation {
         id: squishAnimation
-        NumberAnimation { target: root; property: "scale"; to: 0.86; duration: 70; easing.type: Easing.OutCubic }
-        NumberAnimation { target: root; property: "scale"; to: 1.08; duration: 150; easing.type: Easing.OutBack; easing.overshoot: 1 }
-        NumberAnimation { target: root; property: "scale"; to: 1; duration: 180; easing.type: Easing.OutCubic }
+        NumberAnimation { target: root; property: "scale"; to: 0.95; duration: 100; easing.type: Easing.OutCubic }
+        NumberAnimation { target: root; property: "scale"; to: 1.03; duration: 160; easing.type: Easing.OutBack; easing.overshoot: 0.5 }
+        NumberAnimation { target: root; property: "scale"; to: 1; duration: 220; easing.type: Easing.OutCubic }
     }
 
     onPressTokenChanged: squishAnimation.restart()

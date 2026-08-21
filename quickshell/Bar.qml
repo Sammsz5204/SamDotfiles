@@ -72,13 +72,13 @@ PanelWindow {
 
             spacing: 6
 
-        MorphingButton {
-    		Layout.alignment: Qt.AlignVCenter
-    		icon: ""
-    		text: "Apps"
+            MorphingButton {
+    		      Layout.alignment: Qt.AlignVCenter
+    		      icon: ""
+    		      text: "Apps"
     
-    		onClicked: launcherPanel.visible = !launcherPanel.visible
-	}
+    		      onClicked: launcherPanel.visible = !launcherPanel.visible
+	          }
 
             IdleInhibitor {
             }

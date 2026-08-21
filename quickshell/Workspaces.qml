@@ -85,25 +85,25 @@ RowLayout {
                 NumberAnimation {
                     target: wsBtn
                     property: "scale"
-                    to: 0.86
-                    duration: 70
+                    to: 0.95
+                    duration: 100
                     easing.type: Easing.OutCubic
                 }
 
                 NumberAnimation {
                     target: wsBtn
                     property: "scale"
-                    to: 1.08
-                    duration: 150
+                    to: 1.03
+                    duration: 160
                     easing.type: Easing.OutBack
-                    easing.overshoot: 1
+                    easing.overshoot: 0.5
                 }
 
                 NumberAnimation {
                     target: wsBtn
                     property: "scale"
                     to: 1
-                    duration: 180
+                    duration: 220
                     easing.type: Easing.OutCubic
                 }
             }

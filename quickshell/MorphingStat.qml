@@ -36,7 +36,7 @@ Item {
         radius: isPressed ? 14 : (isExpanded ? 8 : 13)
         color: isExpanded || isPressed ? Colors.surface : "transparent"
 
-        Behavior on radius { NumberAnimation { duration: 250; easing.type: Easing.OutCubic } }
+        Behavior on radius { NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
         Behavior on color { ColorAnimation { duration: 200; easing.type: Easing.OutCubic } }
     }
 
@@ -97,9 +97,9 @@ Item {
 
     SequentialAnimation {
         id: squishAnimation
-        NumberAnimation { target: root; property: "scale"; to: 0.86; duration: 70; easing.type: Easing.OutCubic }
-        NumberAnimation { target: root; property: "scale"; to: 1.08; duration: 100; easing.type: Easing.OutBack; easing.overshoot: 2.0 }
-        NumberAnimation { target: root; property: "scale"; to: 1; duration: 180; easing.type: Easing.OutCubic }
+        NumberAnimation { target: root; property: "scale"; to: 0.95; duration: 100; easing.type: Easing.OutCubic }
+        NumberAnimation { target: root; property: "scale"; to: 1.03; duration: 160; easing.type: Easing.OutBack; easing.overshoot: 0.5 }
+        NumberAnimation { target: root; property: "scale"; to: 1; duration: 220; easing.type: Easing.OutCubic }
     }
 
     onPressTokenChanged: squishAnimation.restart()

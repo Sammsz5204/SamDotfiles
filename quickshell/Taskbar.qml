@@ -38,25 +38,25 @@ RowLayout {
                 NumberAnimation {
                     target: taskBtn
                     property: "scale"
-                    to: 0.86
-                    duration: 70
+                    to: 0.95
+                    duration: 100
                     easing.type: Easing.OutCubic
                 }
 
                 NumberAnimation {
                     target: taskBtn
                     property: "scale"
-                    to: 1.08
-                    duration: 100
+                    to: 1.03
+                    duration: 160
                     easing.type: Easing.OutBack
-                    easing.overshoot: 2.0
+                    easing.overshoot: 0.5
                 }
 
                 NumberAnimation {
                     target: taskBtn
                     property: "scale"
                     to: 1
-                    duration: 180
+                    duration: 220
                     easing.type: Easing.OutCubic
                 }
             }
