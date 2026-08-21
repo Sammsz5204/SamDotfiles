@@ -1,0 +1,10 @@
+* {
+    bg:       #08121D;
+    bg-alt:   #2d353e;
+    fg:       #cfdae2;
+    muted:    #5e646c;
+    
+    red:      #0A2F53;
+    blue:     #57A4C2;
+    accent:   #cb42d7;
+}

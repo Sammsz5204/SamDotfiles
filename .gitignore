@@ -1,0 +1,30 @@
+# Ignora tudo
+*
+
+# Mantém o .gitignore
+!.gitignore
+
+# Diretórios que quero versionar
+!hypr/
+!hypr/**
+
+!scripts/
+!scripts/**
+
+!quickshell/
+!quickshell/**
+
+!rofi/
+!rofi/**
+
+!nvim/
+!nvim/**
+
+!kitty/
+!kitty/**
+
+!btop/
+!btop/**
+
+!nwg-look/
+!nwg-look/**
