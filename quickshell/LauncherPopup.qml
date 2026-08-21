@@ -77,7 +77,7 @@ PopupWindow {
         color: Colors.bg
         border.color: Colors.surface
         border.width: 2
-        radius: 24
+        radius: 13
 
         // --- M3 EXPRESSIVE ENTRANCE ---
         // Faz o popup "nascer" do canto superior esquerdo (onde fica o botao)
@@ -95,7 +95,7 @@ PopupWindow {
 
         ColumnLayout {
             anchors.fill: parent
-            anchors.margins: 14
+            anchors.margins: 0
             spacing: 12
 
             // Barra de Busca
@@ -106,7 +106,7 @@ PopupWindow {
                 color: searchInput.activeFocus ? Colors.bg : Colors.surface
                 border.color: searchInput.activeFocus ? Colors.accent : "transparent"
                 border.width: 2
-                radius: 24
+                radius: 13
 
                 // Transição suave de cor na borda e fundo ao focar
                 Behavior on color { ColorAnimation { duration: 200; easing.type: Easing.OutCubic } }
