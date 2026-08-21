@@ -5,7 +5,7 @@
 -- See https://wiki.hypr.land/Configuring/Basics/Monitors/
 hl.monitor({
 	output = "VGA-1",
-	mode = "1920x1080@100",
+	mode = "1280x720@100",
 	position = "auto",
 	scale = "auto",
 })
@@ -17,7 +17,6 @@ hl.monitor({
 -- Set programs that you use
 local terminal = "kitty"
 local fileManager = "nautilus"
-local menu = "rofi -show drun"
 
 -- Cores: geradas por wallsync.sh a partir do wallpaper ativo.
 -- Rode scripts/wallsync.sh de novo depois de trocar o wallpaper.
@@ -37,7 +36,7 @@ hl.on("hyprland.start", function()
 	hl.exec_cmd("eww daemon")
 	hl.exec_cmd("nm-applet")
 	hl.exec_cmd("quickshell & hyprpaper")
-	hl.exec_cmd("./home/sam/.config/monitor_wall.sh &")
+	hl.exec_cmd("bash /home/sam/.config/scripts/monitor_wall.sh")
 end)
 
 -------------------------------
@@ -105,7 +104,7 @@ hl.config({
 		inactive_opacity = 0.8,
 
 		shadow = {
-			enabled = falste,
+			enabled = false,
 			range = 4,
 			render_power = 3,
 			color = 0xee1a1a1a,
@@ -241,7 +240,7 @@ hl.bind(
 )
 hl.bind(mainMod .. " + E", hl.dsp.exec_cmd(fileManager))
 hl.bind(mainMod .. " + V", hl.dsp.window.float({ action = "toggle" }))
-hl.bind(mainMod .. " + A", hl.dsp.exec_cmd(menu))
+hl.bind(mainMod .. " + A", hl.dsp.exec_cmd("echo '1' > /tmp/qs_toggle"))
 hl.bind(mainMod .. " + P", hl.dsp.window.pseudo())
 hl.bind(mainMod .. " + J", hl.dsp.layout("togglesplit")) -- dwindle only
 

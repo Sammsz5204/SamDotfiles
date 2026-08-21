@@ -1,5 +1,6 @@
 import Quickshell
 import Quickshell.Wayland
+import Quickshell.Io
 import QtQuick
 import QtQuick.Layouts
 
@@ -27,6 +28,31 @@ PanelWindow {
 
     exclusionMode: ExclusionMode.Auto
     WlrLayershell.layer: WlrLayer.Top
+
+    WlrLayershell.keyboardFocus: launcherPanel.visible ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
+
+// --- NOSSO TRUQUE DE IPC INFALÍVEL ---
+    // Ele fica escutando o arquivo sem gastar processamento. 
+    // Quando recebe um sinal, abre o Launcher e já volta a escutar.
+    Process {
+        id: shortcutListener
+        command: ["bash", "-c", "if [ ! -p /tmp/qs_toggle ]; then mkfifo /tmp/qs_toggle; fi; cat /tmp/qs_toggle"]
+        running: true
+        stdout: StdioCollector {
+            onStreamFinished: {
+                launcherPanel.visible = !launcherPanel.visible
+                restartTimer.start()
+            }
+        }
+    }
+
+    // Um timer rápido só pro QML reiniciar o listener com segurança
+    Timer {
+        id: restartTimer
+        interval: 20
+        onTriggered: shortcutListener.running = true
+    }
+    // -------------------------------------
 
     Rectangle {
         id: background
@@ -96,22 +122,6 @@ PanelWindow {
 
             spacing: 6
 
-            StatText {
-                Layout.alignment: Qt.AlignVCenter
-                iconText: "󰂯"
-
-                command: [
-                    "bash",
-                    "-c",
-                    "~/.config/scripts/bluetooth-display.sh"
-                ]
-
-                intervalMs: 10000
-
-                onClicked: Quickshell.execDetached([
-                    "blueman-manager"
-                ])
-            }
 
             MorphingStat {
                 Layout.alignment: Qt.AlignVCenter
@@ -161,19 +171,19 @@ PanelWindow {
     }
 
 
-    SystemPanelPopup {
-        id: systemPanel
-
-        anchor.window: bar
-        anchor.rect.x: bar.width - width - 10
-        anchor.rect.y: bar.height + 5
-    }
-
     LauncherPopup {
         id: launcherPanel
 
         anchor.window: bar
         anchor.rect.x: 10
+        anchor.rect.y: bar.height + 5
+    }
+
+    SystemPanelPopup {
+        id: systemPanel
+
+        anchor.window: bar
+        anchor.rect.x: bar.width - width - 10
         anchor.rect.y: bar.height + 5
     }
 }

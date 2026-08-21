@@ -1,5 +1,5 @@
 // ============================================================
-// LauncherPopup.qml — Material 3 Expressive Animated
+// LauncherPopup.qml — Material 3 Expressive (Lightweight)
 // ============================================================
 import Quickshell
 import Quickshell.Io
@@ -32,7 +32,7 @@ PopupWindow {
         }
     }
 
-    // Leitura silenciosa dos .desktop
+    // Leitura dos apps via Python (roda apenas uma vez)
     Process {
         id: appScanner
         command: [
@@ -44,19 +44,23 @@ PopupWindow {
             "for p in paths:\n" +
             "    for f in glob.glob(p):\n" +
             "        try:\n" +
-            "            cfg = configparser.ConfigParser(interpolation=None)\n" +
+            "            cfg = configparser.ConfigParser(interpolation=None, strict=False)\n" +
             "            cfg.read(f, encoding='utf-8')\n" +
             "            if 'Desktop Entry' in cfg:\n" +
             "                e = cfg['Desktop Entry']\n" +
-            "                if e.get('NoDisplay') == 'true' or e.get('Type') != 'Application': continue\n" +
+            "                if e.get('NoDisplay', 'false').lower() == 'true' or e.get('Type', 'Application') != 'Application': continue\n" +
+            "                # Pega o nome padrão ou tenta variações\n" +
             "                name = e.get('Name', '')\n" +
-            "                if not name or name in seen: continue\n" +
+            "                if not name: continue\n" +
+            "                if name in seen: continue\n" +
             "                seen.add(name)\n" +
             "                exec_cmd = e.get('Exec', '').split('%')[0].strip()\n" +
-            "                icon = e.get('Icon', '')\n" +
-            "                comment = e.get('Comment', '')\n" +
-            "                apps.append({'name': name, 'icon': icon, 'exec': exec_cmd, 'comment': comment})\n" +
-            "        except Exception: pass\n" +
+            "                if not exec_cmd: continue\n" +
+            "                comment = e.get('Comment', 'Aplicativo do sistema')\n" +
+            "                apps.append({'name': name, 'icon': e.get('Icon', ''), 'exec': exec_cmd, 'comment': comment})\n" +
+            "        except Exception:\n" +
+            "            pass\n" +
+            "# Fallback caso algum app importante passe batido\n" +
             "apps.sort(key=lambda x: x['name'].lower())\n" +
             "print(json.dumps(apps))"
         ]
@@ -72,50 +76,57 @@ PopupWindow {
     }
 
     Rectangle {
-        id: container
+        id: cardContainer
         anchors.fill: parent
         color: Colors.bg
-        border.color: Colors.surface
-        border.width: 2
+        border.color: Qt.alpha(Colors.surface, 0.8)
+        border.width: 1
         radius: 13
+        clip: true
 
-        // --- M3 EXPRESSIVE ENTRANCE ---
-        // Faz o popup "nascer" do canto superior esquerdo (onde fica o botao)
+        // --- ANIMAÇÃO DE EXPANSÃO DO VÍDEO (M3E DROPDOWN) ---
         transformOrigin: Item.TopLeft
-        
-        scale: root.visible ? 1.0 : 0.85
+
+        scale: root.visible ? 1.0 : 0.82
         opacity: root.visible ? 1.0 : 0.0
 
         Behavior on scale {
-            NumberAnimation { duration: 350; easing.type: Easing.OutBack; easing.overshoot: 1 }
+            NumberAnimation {
+                duration: 320
+                easing.type: Easing.OutBack
+                easing.overshoot: 1.4 // Mola idêntica ao vídeo do M3E
+            }
         }
+
         Behavior on opacity {
-            NumberAnimation { duration: 250; easing.type: Easing.OutCubic }
+            NumberAnimation {
+                duration: 200
+                easing.type: Easing.OutCubic
+            }
         }
 
         ColumnLayout {
             anchors.fill: parent
-            anchors.margins: 0
-            spacing: 12
+            anchors.margins: 14
+            spacing: 10
 
-            // Barra de Busca
+            // Campo de busca Pill (estilo M3 Settings print)
             Rectangle {
                 Layout.fillWidth: true
-                Layout.preferredHeight: 48
+                Layout.preferredHeight: 52
 
-                color: searchInput.activeFocus ? Colors.bg : Colors.surface
+                color: searchInput.activeFocus ? Colors.surface : Qt.lighter(Colors.bg, 1.15)
                 border.color: searchInput.activeFocus ? Colors.accent : "transparent"
                 border.width: 2
                 radius: 13
 
-                // Transição suave de cor na borda e fundo ao focar
-                Behavior on color { ColorAnimation { duration: 200; easing.type: Easing.OutCubic } }
-                Behavior on border.color { ColorAnimation { duration: 200; easing.type: Easing.OutCubic } }
+                Behavior on color { ColorAnimation { duration: 150 } }
+                Behavior on border.color { ColorAnimation { duration: 150 } }
 
                 RowLayout {
                     anchors.fill: parent
-                    anchors.leftMargin: 16
-                    anchors.rightMargin: 16
+                    anchors.leftMargin: 18
+                    anchors.rightMargin: 18
                     spacing: 12
 
                     Text {
@@ -123,11 +134,8 @@ PopupWindow {
                         font.family: "JetBrainsMono Nerd Font"
                         font.pixelSize: 18
                         color: searchInput.activeFocus ? Colors.accent : Colors.muted
-                        
-                        // O ícone pula levemente ao ganhar foco
-                        scale: searchInput.activeFocus ? 1.15 : 1.0
-                        Behavior on scale { NumberAnimation { duration: 300; easing.type: Easing.OutBack; easing.overshoot: 1.5 } }
-                        Behavior on color { ColorAnimation { duration: 200 } }
+
+                        Behavior on color { ColorAnimation { duration: 150 } }
                     }
 
                     TextField {
@@ -173,14 +181,14 @@ PopupWindow {
                 }
             }
 
-            // Lista de Apps
+            // Lista de Apps estilo M3 Cards
             ListView {
                 id: appListView
 
                 Layout.fillWidth: true
                 Layout.fillHeight: true
                 clip: true
-                spacing: 8 // Mais respiro entre os itens M3
+                spacing: 8
 
                 model: root.filteredApps
 
@@ -188,73 +196,77 @@ PopupWindow {
                     id: appCard
 
                     width: appListView.width
-                    height: 56
-                    radius: 16
+                    height: 64
+                    radius: 20 // Bordas M3 bem arredondadas
                     property var appData: modelData
 
-                    // Fundo tonal dinâmico
+                    // Estilo M3: Card individual com fundo elevado + feedback ativo
                     color: itemMouse.pressed 
-                        ? Qt.darker(Colors.surface, 1.2)
-                        : (itemMouse.containsMouse ? Qt.lighter(Colors.surface, 1.15) : "transparent")
+                        ? Colors.accent
+                        : (itemMouse.containsMouse ? Qt.lighter(Colors.surface, 1.2) : Colors.surface)
 
-                    // --- M3 EXPRESSIVE SQUISH/FLOAT ---
-                    scale: itemMouse.pressed ? 0.94 : (itemMouse.containsMouse ? 1.02 : 1.0)
+                    scale: itemMouse.pressed ? 0.96 : (itemMouse.containsMouse ? 1.01 : 1.0)
 
-                    Behavior on scale { 
-                        NumberAnimation { duration: 250; easing.type: Easing.OutBack; easing.overshoot: 1.5 } 
+                    Behavior on scale {
+                        NumberAnimation { duration: 180; easing.type: Easing.OutBack; easing.overshoot: 1.5 }
                     }
-                    Behavior on color { 
-                        ColorAnimation { duration: 150; easing.type: Easing.OutCubic } 
+                    Behavior on color {
+                        ColorAnimation { duration: 120 }
                     }
 
                     RowLayout {
                         anchors.fill: parent
-                        anchors.leftMargin: 12
-                        anchors.rightMargin: 12
-                        spacing: 12
+                        anchors.leftMargin: 14
+                        anchors.rightMargin: 14
+                        spacing: 14
 
-                        // Ícone com leve elevação no hover
+                        // Badge Circular pro Ícone Placeholder (Mantido o mesmo ícone)
                         Rectangle {
-                            Layout.preferredWidth: 36
-                            Layout.preferredHeight: 36
-                            radius: 10
-                            color: itemMouse.containsMouse ? Colors.bg : Colors.surface
-                            
-                            Behavior on color { ColorAnimation { duration: 150 } }
+                            Layout.preferredWidth: 42
+                            Layout.preferredHeight: 42
+                            radius: 21 // Círculo perfeito estilo print
+                            color: itemMouse.pressed 
+                                ? Qt.rgba(1, 1, 1, 0.25) 
+                                : (itemMouse.containsMouse ? Colors.bg : Qt.lighter(Colors.bg, 1.1))
+
+                            Behavior on color { ColorAnimation { duration: 120 } }
 
                             Text {
                                 anchors.centerIn: parent
                                 text: "󰵆"
                                 font.family: "JetBrainsMono Nerd Font"
-                                font.pixelSize: 18
-                                color: Colors.accent
-                                
-                                scale: itemMouse.containsMouse ? 1.1 : 1.0
-                                Behavior on scale { NumberAnimation { duration: 250; easing.type: Easing.OutBack; easing.overshoot: 2.0 } }
+                                font.pixelSize: 20
+                                color: itemMouse.pressed ? Colors.bg : Colors.accent
+
+                                Behavior on color { ColorAnimation { duration: 120 } }
                             }
                         }
 
                         ColumnLayout {
                             Layout.fillWidth: true
-                            spacing: 0
+                            spacing: 2
 
                             Text {
                                 text: appCard.appData.name || ""
-                                color: Colors.fg
+                                color: itemMouse.pressed ? Colors.bg : Colors.fg
                                 font.family: "JetBrainsMono Nerd Font"
-                                font.pixelSize: 13
+                                font.pixelSize: 14
                                 font.bold: true
                                 elide: Text.ElideRight
                                 Layout.fillWidth: true
+
+                                Behavior on color { ColorAnimation { duration: 120 } }
                             }
 
                             Text {
                                 text: appCard.appData.comment || "Aplicativo do sistema"
-                                color: Colors.muted
+                                color: itemMouse.pressed ? Qt.rgba(0, 0, 0, 0.6) : Colors.muted
                                 font.family: "JetBrainsMono Nerd Font"
                                 font.pixelSize: 11
                                 elide: Text.ElideRight
                                 Layout.fillWidth: true
+
+                                Behavior on color { ColorAnimation { duration: 120 } }
                             }
                         }
                     }

@@ -31,7 +31,7 @@ local c_red = cores[2] or "a73e47"
 local c_yellow = cores[3] or "c6bc53"
 local c_green = cores[4] or "53c666"
 local c_blue = cores[5] or "4255af"
-local accent = cores[6] or "cb42d7"
+local accent = cores[6] or "353236"
 
 -- Função para clarear a cor
 local function clarear(hex, factor)
