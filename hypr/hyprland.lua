@@ -5,7 +5,7 @@
 -- See https://wiki.hypr.land/Configuring/Basics/Monitors/
 hl.monitor({
 	output = "VGA-1",
-	mode = "1280x720@100",
+	mode = "1920x1080@100",
 	position = "auto",
 	scale = "auto",
 })
@@ -353,7 +353,6 @@ hl.window_rule({
 --     no_anim = true,
 -- })
 -- overlayLayerRule:set_enabled(false)
-
 
 -- Hyprland-run windowrule
 hl.window_rule({

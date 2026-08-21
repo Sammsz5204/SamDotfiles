@@ -87,7 +87,7 @@ PopupWindow {
         opacity: root.visible ? 1.0 : 0.0
 
         Behavior on scale {
-            NumberAnimation { duration: 350; easing.type: Easing.OutBack; easing.overshoot: 1.6 }
+            NumberAnimation { duration: 350; easing.type: Easing.OutBack; easing.overshoot: 1 }
         }
         Behavior on opacity {
             NumberAnimation { duration: 250; easing.type: Easing.OutCubic }
@@ -126,7 +126,7 @@ PopupWindow {
                         
                         // O ícone pula levemente ao ganhar foco
                         scale: searchInput.activeFocus ? 1.15 : 1.0
-                        Behavior on scale { NumberAnimation { duration: 300; easing.type: Easing.OutBack; easing.overshoot: 2.0 } }
+                        Behavior on scale { NumberAnimation { duration: 300; easing.type: Easing.OutBack; easing.overshoot: 1.5 } }
                         Behavior on color { ColorAnimation { duration: 200 } }
                     }
 
@@ -201,7 +201,7 @@ PopupWindow {
                     scale: itemMouse.pressed ? 0.94 : (itemMouse.containsMouse ? 1.02 : 1.0)
 
                     Behavior on scale { 
-                        NumberAnimation { duration: 250; easing.type: Easing.OutBack; easing.overshoot: 2.5 } 
+                        NumberAnimation { duration: 250; easing.type: Easing.OutBack; easing.overshoot: 1.5 } 
                     }
                     Behavior on color { 
                         ColorAnimation { duration: 150; easing.type: Easing.OutCubic } 
