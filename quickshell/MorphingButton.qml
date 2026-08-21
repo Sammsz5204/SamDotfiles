@@ -80,7 +80,7 @@ Item {
     SequentialAnimation {
         id: squishAnimation
         NumberAnimation { target: root; property: "scale"; to: 0.86; duration: 70; easing.type: Easing.OutCubic }
-        NumberAnimation { target: root; property: "scale"; to: 1.08; duration: 100; easing.type: Easing.OutBack; easing.overshoot: 2.0 }
+        NumberAnimation { target: root; property: "scale"; to: 1.08; duration: 150; easing.type: Easing.OutBack; easing.overshoot: 1 }
         NumberAnimation { target: root; property: "scale"; to: 1; duration: 180; easing.type: Easing.OutCubic }
     }
 
