@@ -14,7 +14,7 @@ Scope {
         model: Quickshell.screens
 
         Bar {
-    	   modelData: screen
-	}
+            modelData: modelData
+        }
     }
 }

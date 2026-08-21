@@ -103,7 +103,7 @@ PopupWindow {
 
         ColumnLayout {
             anchors.fill: parent
-            anchors.margins: 10
+            anchors.margins: 15
             spacing: 10
 
             Rectangle {
@@ -329,7 +329,7 @@ PopupWindow {
                     icon: "󰸉"
                     label: "Wall (Aleat)"
                     iconColor: Colors.brightGreen
-                    cmd: "~/.config/eww/scripts/random_wallpaper.sh &"
+                    cmd: "~/.config/scripts/random_wallpaper.sh &"
                 }
 
                 ActionBtn {
@@ -408,7 +408,7 @@ PopupWindow {
         }
     }
 
-    component ActionBtn: Rectangle {
+component ActionBtn: Rectangle {
         property string icon: ""
         property string label: ""
         property color iconColor: Colors.fg
@@ -417,18 +417,22 @@ PopupWindow {
         Layout.fillWidth: true
         Layout.preferredHeight: 65
 
-        color: mArea.containsMouse
-            ? Colors.bg
-            : Colors.surface
+        // Fundo tonal liso, sem borda. Clareia no hover e escurece no press.
+        color: mArea.pressed 
+            ? Colors.bg 
+            : (mArea.containsMouse ? Qt.lighter(Colors.surface, 1.2) : Colors.surface)
 
-        border.color: Colors.muted
-        border.width: 1
         radius: 14
 
+        // Efeito Squish (esmaga no clique) e Float (cresce no hover)
+        scale: mArea.pressed ? 0.92 : (mArea.containsMouse ? 1.03 : 1.0)
+        
+        Behavior on scale {
+            NumberAnimation { duration: 250; easing.type: Easing.OutBack; easing.overshoot: 2.5 }
+        }
+
         Behavior on color {
-            ColorAnimation {
-                duration: 150
-            }
+            ColorAnimation { duration: 150 }
         }
 
         ColumnLayout {
@@ -440,6 +444,12 @@ PopupWindow {
                 color: parent.parent.iconColor
                 font.pixelSize: 20
                 Layout.alignment: Qt.AlignHCenter
+                
+                // O ícone dá um pulinho extra descolado do botão
+                scale: mArea.containsMouse ? 1.15 : 1.0
+                Behavior on scale {
+                    NumberAnimation { duration: 250; easing.type: Easing.OutBack; easing.overshoot: 3.0 }
+                }
             }
 
             Text {
@@ -456,6 +466,7 @@ PopupWindow {
 
             anchors.fill: parent
             hoverEnabled: true
+            cursorShape: Qt.PointingHandCursor // Mãozinha pra dar aquele feedback de clique
 
             onClicked: {
                 if (parent.cmd === "__CLOSE__") {
@@ -476,46 +487,48 @@ PopupWindow {
         }
     }
 
-    	component MediaButton: Rectangle {
-    property string iconText: ""
+    component MediaButton: Rectangle {
+        property string iconText: ""
 
-    implicitWidth: 28
-    implicitHeight: 28
+        // Deixei levemente maior e totalmente redondo (Circle/Pill)
+        implicitWidth: 32
+        implicitHeight: 32
 
-    radius: 8
+        radius: 16 
 
-    color: mouseArea.containsMouse
-        ? Colors.bg
-        : "transparent"
+        color: mouseArea.pressed
+            ? Colors.surface
+            : (mouseArea.containsMouse ? Colors.bg : "transparent")
 
-    Behavior on color {
-        ColorAnimation {
-            duration: 120
+        // Mesmo efeito de mola dos botões principais
+        scale: mouseArea.pressed ? 0.85 : (mouseArea.containsMouse ? 1.1 : 1.0)
+
+        Behavior on scale {
+            NumberAnimation { duration: 250; easing.type: Easing.OutBack; easing.overshoot: 2.0 }
         }
+
+        Behavior on color {
+            ColorAnimation { duration: 120 }
+        }
+
+        Text {
+            anchors.centerIn: parent
+            text: parent.parent.iconText
+            color: mouseArea.containsMouse ? Colors.blue : Colors.fg
+            font.family: "JetBrainsMono Nerd Font"
+            font.pixelSize: 15
+        }
+
+        MouseArea {
+            id: mouseArea
+
+            anchors.fill: parent
+            hoverEnabled: true
+            cursorShape: Qt.PointingHandCursor
+
+            onClicked: parent.parent.clicked()
+        }
+
+        signal clicked()
     }
-
-    Text {
-        anchors.centerIn: parent
-
-        text: iconText
-
-        color: mouseArea.containsMouse
-            ? Colors.blue
-            : Colors.fg
-
-        font.family: "JetBrainsMono Nerd Font"
-        font.pixelSize: 14
-    }
-
-    MouseArea {
-        id: mouseArea
-
-        anchors.fill: parent
-        hoverEnabled: true
-
-        onClicked: parent.parent.clicked()
-    }
-
-    signal clicked()
-      }
-    }
+}

@@ -51,11 +51,7 @@ PanelWindow {
     		icon: ""
     		text: "Apps"
     
-    		onClicked: Quickshell.execDetached([
-        	"rofi",
-        	"-show",
-        	"drun"
-    	   ])
+    		onClicked: launcherPanel.visible = !launcherPanel.visible
 	}
 
             IdleInhibitor {
@@ -170,6 +166,14 @@ PanelWindow {
 
         anchor.window: bar
         anchor.rect.x: bar.width - width - 10
+        anchor.rect.y: bar.height + 5
+    }
+
+    LauncherPopup {
+        id: launcherPanel
+
+        anchor.window: bar
+        anchor.rect.x: 10
         anchor.rect.y: bar.height + 5
     }
 }
