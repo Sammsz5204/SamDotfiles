@@ -33,7 +33,7 @@ Item {
 
     Rectangle {
         anchors.fill: parent
-        radius: isPressed ? 14 : (isExpanded ? 8 : 13)
+        radius: isPressed ? 17 : (isExpanded ? 11 : 16)
         color: isExpanded || isPressed ? Colors.surface : "transparent"
 
         Behavior on radius { NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }

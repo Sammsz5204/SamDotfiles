@@ -19,7 +19,7 @@ Item {
 
     Rectangle {
         anchors.fill: parent
-        radius: 8
+        radius: 13
         color: mouseArea.containsMouse ? Colors.surface : "transparent"
 
         Behavior on color {

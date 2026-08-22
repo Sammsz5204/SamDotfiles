@@ -37,6 +37,7 @@ hl.on("hyprland.start", function()
 	hl.exec_cmd("nm-applet")
 	hl.exec_cmd("quickshell & hyprpaper")
 	hl.exec_cmd("bash /home/sam/.config/scripts/monitor_wall.sh")
+	hl.exec_cmd("/usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1")
 end)
 
 -------------------------------

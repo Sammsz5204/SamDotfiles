@@ -99,7 +99,7 @@ PopupWindow {
         color: Colors.bg
         border.color: Colors.surface
         border.width: 2
-        radius: 14
+        radius: 19
 
         ColumnLayout {
             anchors.fill: parent
@@ -110,7 +110,7 @@ PopupWindow {
                 Layout.fillWidth: true
                 Layout.preferredHeight: 120
                 color: Colors.surface
-                radius: 14
+                radius: 18
 
                 RowLayout {
                     anchors.fill: parent
@@ -152,7 +152,7 @@ PopupWindow {
                 Layout.fillWidth: true
                 Layout.preferredHeight: 62
                 color: Colors.surface
-                radius: 14
+                radius: 18
 
                 RowLayout {
                     anchors.fill: parent
@@ -162,7 +162,7 @@ PopupWindow {
                     Rectangle {
                         width: 38
                         height: 38
-                        radius: 10
+                        radius: 14
                         color: Colors.bg
 
                         Text {
@@ -360,27 +360,27 @@ PopupWindow {
 
             Rectangle {
                 Layout.fillWidth: true
-                Layout.preferredHeight: 34
+                Layout.preferredHeight: 38
                 color: Colors.surface
-                radius: 14
+                radius: 18
 
                 RowLayout {
                     anchors.fill: parent
-                    anchors.margins: 10
+                    anchors.margins: 0
 
                     RowLayout {
-                        spacing: 6
+                        spacing: 3
 
                         Text {
                             text: "󰔚"
                             color: Colors.yellow
-                            font.pixelSize: 14
+                            font.pixelSize: 19
                         }
 
                         Text {
                             text: root.uptimeStr
                             color: Colors.muted
-                            font.pixelSize: 11
+                            font.pixelSize: 12
                         }
                     }
 
@@ -389,18 +389,18 @@ PopupWindow {
                     }
 
                     RowLayout {
-                        spacing: 6
+                        spacing: 3
 
                         Text {
                             text: "󰥔"
                             color: Colors.yellow
-                            font.pixelSize: 14
+                            font.pixelSize: 19
                         }
 
                         Text {
                             text: root.clockNow
                             color: Colors.muted
-                            font.pixelSize: 11
+                            font.pixelSize: 12
                         }
                     }
                 }
@@ -419,16 +419,16 @@ component ActionBtn: Rectangle {
 
         // Fundo tonal liso, sem borda. Clareia no hover e escurece no press.
         color: mArea.pressed 
-            ? Colors.bg 
-            : (mArea.containsMouse ? Qt.lighter(Colors.surface, 1.2) : Colors.surface)
+            ? Colors.surface
+            : (mArea.containsMouse ? Qt.lighter(Colors.surface, 1.9) : Colors.surface)
 
-        radius: 14
+        
 
         // Efeito Squish (esmaga no clique) e Float (cresce no hover)
-        scale: mArea.pressed ? 0.92 : (mArea.containsMouse ? 1.03 : 1.0)
+        radius: mArea.pressed ? 10 : (mArea.containsMouse ? 20 : 15 )
         
-        Behavior on scale {
-            NumberAnimation { duration: 250; easing.type: Easing.OutBack; easing.overshoot: 2.5 }
+        Behavior on radius {
+            NumberAnimation { duration: 250; easing.type: Easing.OutBack; easing.overshoot: 0.5 }
         }
 
         Behavior on color {
@@ -494,17 +494,17 @@ component ActionBtn: Rectangle {
         implicitWidth: 32
         implicitHeight: 32
 
-        radius: 16 
+         
 
         color: mouseArea.pressed
             ? Colors.surface
             : (mouseArea.containsMouse ? Colors.bg : "transparent")
 
         // Mesmo efeito de mola dos botões principais
-        scale: mouseArea.pressed ? 0.85 : (mouseArea.containsMouse ? 1.1 : 1.0)
+        radius: mouseArea.pressed ? 12 : (mouseArea.containsMouse ? 20 : 0)
 
-        Behavior on scale {
-            NumberAnimation { duration: 250; easing.type: Easing.OutBack; easing.overshoot: 2.0 }
+        Behavior on radius {
+            NumberAnimation { duration: 250; easing.type: Easing.OutBack}
         }
 
         Behavior on color {

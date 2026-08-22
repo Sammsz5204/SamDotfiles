@@ -81,7 +81,7 @@ PopupWindow {
         color: Colors.bg
         border.color: Qt.alpha(Colors.surface, 0.8)
         border.width: 1
-        radius: 13
+        radius: 19
         clip: true
 
         // --- ANIMAÇÃO DE EXPANSÃO DO VÍDEO (M3E DROPDOWN) ---
@@ -205,7 +205,7 @@ PopupWindow {
                         ? Colors.accent
                         : (itemMouse.containsMouse ? Qt.lighter(Colors.surface, 1.2) : Colors.surface)
 
-                    scale: itemMouse.pressed ? 0.96 : (itemMouse.containsMouse ? 1.01 : 1.0)
+                    scale: itemMouse.pressed ? 0.93 : (itemMouse.containsMouse ? 1 : 0.99)
 
                     Behavior on scale {
                         NumberAnimation { duration: 180; easing.type: Easing.OutBack; easing.overshoot: 1.5 }
@@ -216,11 +216,11 @@ PopupWindow {
 
                     RowLayout {
                         anchors.fill: parent
-                        anchors.leftMargin: 14
+                        anchors.leftMargin: 16
                         anchors.rightMargin: 14
                         spacing: 14
 
-                        // Badge Circular pro Ícone Placeholder (Mantido o mesmo ícone)
+                        // Badge Circular pro Ícone Placeholder
                         Rectangle {
                             Layout.preferredWidth: 42
                             Layout.preferredHeight: 42

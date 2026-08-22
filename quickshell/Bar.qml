@@ -59,7 +59,7 @@ PanelWindow {
 
         anchors.fill: parent
         color: Colors.bg
-        radius: 13
+        radius: 19
 
         RowLayout {
             id: leftLayout

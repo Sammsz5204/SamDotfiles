@@ -28,8 +28,8 @@ RowLayout {
             Layout.preferredWidth: isFocused ? 24 : 22
             Layout.preferredHeight: 24
 
-            // Morphing de Raio: 12 (Circulo) -> 8 (Focado/Hover) -> 12 (Pressionado)
-            radius: isPressed ? 12 : (isFocused || mouseArea.containsMouse ? 8 : 12)
+            // Morphing de Raio: Abaixa o rounding(1) no comeco do press, e arredonda ao soltar
+            radius: isPressed ? 3 : (isFocused || mouseArea.containsMouse ? 10 : 0)
 
             color: isFocused
                 ? Colors.green
@@ -39,7 +39,7 @@ RowLayout {
             scale: entered ? 1 : 0.45
 
             Behavior on radius {
-                NumberAnimation { duration: 250; easing.type: Easing.OutCubic }
+                NumberAnimation { duration: 150; easing.type: Easing.OutCubic }
             }
 
             Behavior on color {

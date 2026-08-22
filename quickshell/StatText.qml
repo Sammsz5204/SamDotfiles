@@ -22,7 +22,7 @@ Item {
 
     Rectangle {
         anchors.fill: parent
-        radius: 8
+        radius: 9
         color: mouseArea.containsMouse ? Colors.surface : "transparent"
         Behavior on color { ColorAnimation { duration: 150 } }
     }

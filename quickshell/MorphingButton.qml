@@ -27,7 +27,7 @@ Item {
         anchors.fill: parent
         
         // Morphing triplo: 13 (Repouso) -> 8 (Hover/Pílula) -> 14 (Pressionado/Bolha)
-        radius: isPressed ? 14 : (isExpanded ? 8 : 13)
+        radius: isPressed ? 17 : (isExpanded ? 11 : 16)
         color: isExpanded || isPressed ? Colors.surface : "transparent"
 
         Behavior on radius {
