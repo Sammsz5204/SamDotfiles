@@ -18,7 +18,7 @@ error()   { echo -e "${RED}${BOLD}[✗]${NC} $*" >&2; }
 header()  { echo -e "\n${BLUE}${BOLD}── $* ──────────────────────────────${NC}"; }
 
 # ── Diretórios base ────────────────────────────────────
-DOTFILES_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+DOTFILES_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 CONFIG_DIR="${HOME}/.config"
 FONTS_DIR="${HOME}/.local/share/fonts"
 BACKUP_DIR="${HOME}/.config-backup/$(date +%Y%m%d_%H%M%S)"
@@ -30,9 +30,6 @@ PACKAGES=(
     hyprland
     hyprlock
     hyprpaper
-    waybar
-    rofi-wayland
-    eww
     swaync
     cava
     kitty
@@ -193,14 +190,13 @@ link_dotfiles() {
 
     # Mapeamento: pasta_no_repo → destino_em_~/.config
     declare -A CONFIGS=(
-        ["${DOTFILES_DIR}/cava"]="${CONFIG_DIR}/cava"
-        ["${DOTFILES_DIR}/eww"]="${CONFIG_DIR}/eww"
+        ["${DOTFILES_DIR}/btop"]="${CONFIG_DIR}/btop"
         ["${DOTFILES_DIR}/ghostty"]="${CONFIG_DIR}/ghostty"
         ["${DOTFILES_DIR}/hypr"]="${CONFIG_DIR}/hypr"
         ["${DOTFILES_DIR}/kitty"]="${CONFIG_DIR}/kitty"
         ["${DOTFILES_DIR}/nvim"]="${CONFIG_DIR}/nvim"
-        ["${DOTFILES_DIR}/rofi"]="${CONFIG_DIR}/rofi"
-        ["${DOTFILES_DIR}/waybar"]="${CONFIG_DIR}/waybar"
+        ["${DOTFILES_DIR}/nwg-look"]="${CONFIG_DIR}/nwg-look"
+        ["${DOTFILES_DIR}/quickshell"]="${CONFIG_DIR}/quickshell"
         ["${DOTFILES_DIR}/scripts"]="${CONFIG_DIR}/scripts"
     )
 

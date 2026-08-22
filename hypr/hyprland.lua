@@ -33,7 +33,6 @@ local colors = dofile(os.getenv("HOME") .. "/.config/hypr/colors.lua")
 --
 hl.on("hyprland.start", function()
 	hl.exec_cmd("mpd")
-	hl.exec_cmd("eww daemon")
 	hl.exec_cmd("nm-applet")
 	hl.exec_cmd("quickshell & hyprpaper")
 	hl.exec_cmd("bash /home/sam/.config/scripts/monitor_wall.sh")
@@ -251,7 +250,7 @@ hl.bind(mainMod .. " + SHIFT + K", hl.dsp.exec_cmd("killall quickshell"))
 
 -- Hyprlock
 
-hl.bind(mainMod .. " + L", hl.dsp.exec_cmd("hyprlock"))
+hl.bind(mainMod .. " + L", hl.dsp.exec_cmd("qs -p ~/.config/quickshell/ ipc call lock engage"))
 
 -- Move focus with mainMod + arrow keys
 hl.bind(mainMod .. " + left", hl.dsp.focus({ direction = "left" }))

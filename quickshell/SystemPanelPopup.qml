@@ -266,7 +266,7 @@ PopupWindow {
                     icon: "󰌾"
                     label: "Bloquear"
                     iconColor: Colors.yellow
-                    cmd: "hyprlock &"
+                    cmd: "quickshell -p ~/.config/quickshell/ ipc call lock engage"
                 }
 
                 ActionBtn {

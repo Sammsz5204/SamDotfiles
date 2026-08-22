@@ -2,18 +2,18 @@ pragma Singleton
 import QtQuick
 
 QtObject {
-    readonly property color bg: "#16142C"
-    readonly property color surface: "#38374b"
+    readonly property color bg: "#161C19"
+    readonly property color surface: "#383e3b"
     readonly property color fg: "#cfdae2"
-    readonly property color muted: "#676675"
+    readonly property color muted: "#676b69"
 
-    readonly property color accent: "#849CAD"
-    readonly property color red: "#2C264A"
-    readonly property color yellow: "#324264"
-    readonly property color green: "#4C3553"
-    readonly property color blue: "#5B4B6A"
+    readonly property color accent: "#353236"
+    readonly property color red: "#58453B"
+    readonly property color yellow: "#987159"
+    readonly property color green: "#B9926E"
+    readonly property color blue: "#DBBB96"
 
-    readonly property color brightRed: "#6b6780"
-    readonly property color brightGreen: "#817186"
-    readonly property color brightBlue: "#8c8196"
+    readonly property color brightRed: "#8a7c75"
+    readonly property color brightGreen: "#ceb299"
+    readonly property color brightBlue: "#e5cfb5"
 }
