@@ -33,7 +33,6 @@ local colors = dofile(os.getenv("HOME") .. "/.config/hypr/colors.lua")
 --
 hl.on("hyprland.start", function()
 	hl.exec_cmd("mpd")
-	hl.exec_cmd("nm-applet")
 	hl.exec_cmd("hyprpaper")
 	hl.exec_cmd("sleep 2 && qs")
 	hl.exec_cmd("bash /home/sam/.config/scripts/monitor_wall.sh")

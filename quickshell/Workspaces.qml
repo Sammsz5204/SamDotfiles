@@ -28,26 +28,17 @@ RowLayout {
             Layout.preferredWidth: isFocused ? 24 : 22
             Layout.preferredHeight: 24
 
-            // Morphing de Raio: Abaixa o rounding(1) no comeco do press, e arredonda ao soltar
+            // Morphing de Raio: Abaixa o rounding no comeco do press, e arredonda ao soltar
             radius: isPressed ? 3 : (isFocused || mouseArea.containsMouse ? 10 : 0)
+
+            Behavior on radius {
+                NumberAnimation { duration: 250; easing.type: Easing.OutCubic }
+            }
 
             color: isFocused
                 ? Colors.green
                 : (mouseArea.containsMouse || isPressed ? Colors.surface : "transparent")
 
-            opacity: entered ? 1 : 0
-            scale: entered ? 1 : 0.45
-
-            Behavior on radius {
-                NumberAnimation { duration: 100; easing.type: Easing.OutCubic }
-            }
-
-            Behavior on color {
-                ColorAnimation {
-                    duration: 150
-                    easing.type: Easing.OutCubic
-                }
-            }
 
             Behavior on Layout.preferredWidth {
                 NumberAnimation {
@@ -76,35 +67,6 @@ RowLayout {
                     duration: 420
                     easing.type: Easing.OutBack
                     easing.overshoot: 1.5
-                }
-            }
-
-            SequentialAnimation {
-                id: squishAnimation
-
-                NumberAnimation {
-                    target: wsBtn
-                    property: "scale"
-                    to: 0.95
-                    duration: 100
-                    easing.type: Easing.OutCubic
-                }
-
-                NumberAnimation {
-                    target: wsBtn
-                    property: "scale"
-                    to: 1.03
-                    duration: 100
-                    easing.type: Easing.OutBack
-                    easing.overshoot: 0.5
-                }
-
-                NumberAnimation {
-                    target: wsBtn
-                    property: "scale"
-                    to: 1
-                    duration: 170
-                    easing.type: Easing.OutCubic
                 }
             }
 

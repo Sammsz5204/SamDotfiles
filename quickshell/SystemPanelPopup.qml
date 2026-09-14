@@ -46,10 +46,10 @@ PopupWindow {
     // ---------------- drag-and-drop pra reordenar ----------------
     // O tile de verdade fica com opacity 0 (via "ghosted") enquanto o
     // "fantasma" abaixo segue o mouse. A reordenacao acontece AO VIVO
-    // conforme o fantasma passa por cima de outro tile — GridLayout
-    // reflui tudo sozinho (motor de layout de verdade do Qt, nao
-    // posicionamento manual), o resto dos tiles "andam" pra abrir
-    // espaco automaticamente.
+    // conforme o fantasma passa por cima de outro tile — o array de
+    // ordem muda, SystemPanelState.visibleLayout recalcula linha/coluna
+    // de todo mundo, e cada ActionBtn anima ate' o novo targetX/Y
+    // sozinho (Behavior proprio, sem Layout nenhum no meio).
     property string draggingId: ""
     property var draggingModule: draggingId !== "" ? SystemPanelModules.byId(draggingId) : null
 
@@ -415,13 +415,24 @@ PopupWindow {
                 }
             }
 
-            // ---------------- grid de acoes (dirigido por dados) ----------------
-            GridLayout {
-                id: actionsGrid
-                columns: SystemPanelState.gridColumns
-                columnSpacing: 10
-                rowSpacing: 10
+            // ---------------- grid de acoes (posicionamento manual) --------------
+            // Sem GridLayout/RowLayout — x/y/width de cada tile sao
+            // calculados aqui (a partir de SystemPanelState.visibleLayout,
+            // empacotamento greedy testado em Python) e atribuidos como
+            // propriedade normal, livre pra ter Behavior sem restricao
+            // nenhuma (a doc do Qt so' desaconselha animar x/y/width/height
+            // de item gerenciado por Layout — aqui nao ha Layout nenhum
+            // escrevendo essas propriedades, somos nos).
+            Item {
+                id: actionsArea
                 Layout.fillWidth: true
+                implicitHeight: SystemPanelState.totalRows > 0
+                    ? SystemPanelState.totalRows * (65 + itemSpacing) - itemSpacing
+                    : 0
+
+                readonly property real itemSpacing: 10
+                readonly property real unitWidth:
+                    (width - itemSpacing * (SystemPanelState.gridColumns - 1)) / SystemPanelState.gridColumns
 
                 Repeater {
                     id: actionsRepeater
@@ -440,6 +451,22 @@ PopupWindow {
                         iconColor: iconColorRole
                         cmd: cmdRole
                         ghosted: root.draggingId === moduleIdRole
+
+                        // Acha a propria linha/coluna no layout pre-calculado.
+                        // Fallback (row:0,col:0,widthUnits:1) so' pra nunca
+                        // quebrar num frame intermediario antes do sync.
+                        readonly property var layoutEntry: {
+                            for (const e of SystemPanelState.visibleLayout) {
+                                if (e.module.id === moduleIdRole) return e;
+                            }
+                            return { row: 0, col: 0, widthUnits: 1 };
+                        }
+
+                        targetX: layoutEntry.col * (actionsArea.unitWidth + actionsArea.itemSpacing)
+                        targetY: layoutEntry.row * (65 + actionsArea.itemSpacing)
+                        targetWidth: layoutEntry.widthUnits === 2
+                            ? actionsArea.unitWidth * 2 + actionsArea.itemSpacing
+                            : actionsArea.unitWidth
 
                         onCloseRequested: root.visible = false
                         onDragStarted: (mid, gx, gy) => root.beginDrag(mid, gx, gy)

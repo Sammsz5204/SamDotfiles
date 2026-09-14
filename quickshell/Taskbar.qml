@@ -25,44 +25,6 @@ RowLayout {
 
             property int pressToken: 0
 
-            Behavior on color {
-                ColorAnimation {
-                    duration: 150
-                    easing.type: Easing.OutCubic
-                }
-            }
-
-            SequentialAnimation {
-                id: squishAnimation
-
-                NumberAnimation {
-                    target: taskBtn
-                    property: "scale"
-                    to: 0.95
-                    duration: 100
-                    easing.type: Easing.OutCubic
-                }
-
-                NumberAnimation {
-                    target: taskBtn
-                    property: "scale"
-                    to: 1.03
-                    duration: 160
-                    easing.type: Easing.OutBack
-                    easing.overshoot: 0.5
-                }
-
-                NumberAnimation {
-                    target: taskBtn
-                    property: "scale"
-                    to: 1
-                    duration: 220
-                    easing.type: Easing.OutCubic
-                }
-            }
-
-            onPressTokenChanged: squishAnimation.restart()
-
             Text {
                 anchors.centerIn: parent
                 text: "●"

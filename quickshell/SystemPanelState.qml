@@ -96,10 +96,18 @@ Scope {
     // Guardado por id, paralelo e DESACOPLADO da ordem de proposito —
     // reordenar nao pode bagunçar tamanho nenhum. Testado em Python:
     // sobrescrever nao duplica, tamanho sobrevive a reorder.
+    //
+    // So' 1x1/2x1 (largura, nunca altura) — igual o Quick Settings do
+    // Android de verdade. O "2x2" foi invencao nossa; tirei porque um
+    // tile mais "alto" so' funciona direito com um motor de grid 2D
+    // (GridLayout), que foi exatamente o que causou o bug de teleporte
+    // que nunca fechamos de vez. Sem essa dimensao extra, a gente troca
+    // pra Column-de-RowLayout (linhas independentes, pre-calculadas em
+    // JS) — arquitetura que resolve o problema na raiz, nao so' remenda.
     property alias sizedIds: adapter.sizedIds
     property alias sizeValues: adapter.sizeValues
 
-    readonly property var sizeOptions: ["1x1", "2x1", "2x2"]
+    readonly property var sizeOptions: ["1x1", "2x1"]
 
     function sizeFor(id) {
         const i = root.sizedIds.indexOf(id);
@@ -141,14 +149,10 @@ Scope {
         root.setSize(id, root.sizeOptions[Math.max(idx - 1, 0)]);
     }
 
-    // "1x1" -> {cols:1, rows:1}, com fallback seguro pra valor invalido
-    function spanFor(id) {
-        const size = root.sizeFor(id);
-        switch (size) {
-            case "2x1": return { cols: 2, rows: 1 };
-            case "2x2": return { cols: 2, rows: 2 };
-            default:    return { cols: 1, rows: 1 };
-        }
+    // "1x1" -> 1, "2x1" -> 2 (quantas colunas de largura). Fallback
+    // seguro (1) pra qualquer valor invalido/corrompido.
+    function widthUnitsFor(id) {
+        return root.sizeFor(id) === "2x1" ? 2 : 1;
     }
 
     function resetToDefaults() {
@@ -169,6 +173,46 @@ Scope {
     readonly property var availableToAdd: root.hidden
         .map(id => SystemPanelModules.byId(id))
         .filter(m => m !== null)
+
+    // ---------------- layout achatado (pre-calculado) ----------------
+    // Em vez de deixar um GridLayout 2D decidir sozinho onde cada tile
+    // vai (auto-placement que pode reposicionar ATE o proprio tile
+    // redimensionado — foi exatamente isso que causou o bug de
+    // teleporte que nunca fechamos), a gente decide aqui, em JS, a
+    // linha/coluna de cada modulo — greedy, na ordem: acumula largura
+    // ate estourar "gridColumns", ai comeca linha nova.
+    //
+    // Formato ACHATADO (um item por entrada, com row/col/w), nao
+    // agrupado em arrays-de-arrays — assim a UI pode desenhar tudo com
+    // posicionamento manual (x/y calculados, nao Layout.columnSpan),
+    // o que deixa x/y/width livres pra ter Behavior sem restricao
+    // nenhuma (a regra "nao anime x/y/width/height de item em Layout"
+    // so' vale quando e' o PROPRIO Layout que escreve — se somos nos
+    // que calculamos e atribuimos, nao ha conflito algum).
+    //
+    // Testado em Python (incluindo item 2x1 empurrando o resto pra
+    // proxima linha) antes de virar QML: nunca perde nem reordena
+    // nenhum modulo.
+    readonly property var visibleLayout: {
+        const cols = root.gridColumns;
+        const result = [];
+        let rowIndex = 0;
+        let colUnits = 0;
+        for (const m of root.visibleModules) {
+            const w = root.widthUnitsFor(m.id);
+            if (colUnits + w > cols && colUnits > 0) {
+                rowIndex += 1;
+                colUnits = 0;
+            }
+            result.push({ module: m, row: rowIndex, col: colUnits, widthUnits: w });
+            colUnits += w;
+        }
+        return result;
+    }
+
+    readonly property int totalRows: root.visibleLayout.length > 0
+        ? root.visibleLayout[root.visibleLayout.length - 1].row + 1
+        : 0
 
     FileView {
         id: fileView

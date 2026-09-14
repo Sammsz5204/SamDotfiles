@@ -3,14 +3,24 @@ import QtQuick.Layouts
 import Quickshell
 
 // ============================================================
-// ActionBtn.qml — extraido do SystemPanelPopup.qml (estava inline,
-// duplicado goal de 16 vezes). Comportamento visual identico ao
-// original (hover/press/squish/OutBack) — so' adicionei a camada de
-// modo de edicao (badge ✕ pra esconder, setas pra reordenar), que fica
-// invisivel e sem efeito nenhum quando SystemPanelState.editMode e'
-// false. Uso normal continua identico a antes.
+// ActionBtn.qml — reescrito depois de aprender com o nandoroid-shell
+// (github.com/na-ive/nandoroid-shell) que o jeito robusto de fazer
+// isso e' NAO usar GridLayout/RowLayout pra posicionar os tiles.
+//
+// Posicionamento manual: a Popup calcula targetX/targetY/targetWidth
+// pra cada tile (via SystemPanelState.visibleLayout, empacotamento
+// greedy pre-calculado em JS — testado em Python antes de virar
+// codigo) e passa como propriedade normal. Como NENHUM Layout do Qt
+// esta escrevendo x/y/width aqui, Behavior neles funciona sem
+// restricao nenhuma — a doc so' desaconselha isso quando e' o proprio
+// Layout quem escreve a propriedade (foi exatamente o que causava o
+// "teleporta e so' depois estica" nas duas tentativas anteriores).
+//
+// So' 1x1/2x1 agora (largura, nunca altura) — igual o Quick Settings
+// do Android de verdade, e o que permite esse posicionamento simples
+// (altura sempre igual pra todo mundo).
 // ============================================================
-Item {
+Rectangle {
     id: root
 
     property string moduleId: ""
@@ -18,6 +28,12 @@ Item {
     property string label: ""
     property color iconColor: Colors.fg
     property string cmd: ""
+
+    // Calculados e passados pela Popup (a partir de SystemPanelState.visibleLayout)
+    property real targetX: 0
+    property real targetY: 0
+    property real targetWidth: 65
+    readonly property real tileHeight: 65
 
     // Quando o proprio drag deste tile esta em andamento, a Popup pede
     // pra esconder o tile "de verdade" (o "fantasma" que segue o mouse
@@ -29,67 +45,122 @@ Item {
     signal dragMoved(real globalX, real globalY)
     signal dragEnded()
 
-    // "root" e' so' o SLOT que o GridLayout gerencia — nunca aparece
-    // na tela por si (nao tem cor/borda propria). A doc oficial do
-    // proprio tipo Layout avisa: "It is not recommended to have
-    // bindings to the x, y, width, or height properties of items in a
-    // layout" — colocar Behavior nessas 4 propriedades AQUI (que e'
-    // exatamente o que causava o "teleporta e so' depois estica": a
-    // animacao brigando com a escrita do proprio motor de layout) e'
-    // o padrao que a doc pede pra evitar.
-    //
-    // Quem de fato aparece e anima e' o bgRect logo abaixo: ele so'
-    // "persegue" width/height de root (propriedades NOSSAS, livres pra
-    // ter Behavior) ficando sempre centralizado — cresce/encolhe a
-    // partir do centro, sem pular.
-    Layout.fillWidth: true
-    Layout.preferredHeight: 65
-    Layout.columnSpan: SystemPanelState.spanFor(moduleId).cols
-    Layout.rowSpan: SystemPanelState.spanFor(moduleId).rows
-
-    // So' liga o Behavior do bgRect DEPOIS que o layout inicial ja'
-    // assentou uma vez — sem isso a primeira abertura do painel tambem
-    // "cresce" do zero, o que nao e' o que a gente quer.
+    // So' comeca a animar DEPOIS que o layout inicial ja' assentou uma
+    // vez — sem isso a primeira abertura do painel tambem "anima" (nao
+    // e' o que a gente quer, so' mudanca de verdade deve).
     property bool animReady: false
     Component.onCompleted: Qt.callLater(() => root.animReady = true)
 
-    Rectangle {
-        id: bgRect
+    x: targetX
+    y: targetY
+    width: targetWidth
+    height: tileHeight
 
-        anchors.centerIn: parent
-        width: root.width
-        height: root.height
+    Behavior on x {
+        enabled: root.animReady
+        NumberAnimation { duration: 300; easing.type: Easing.OutBack; easing.overshoot: 1.2 }
+    }
+    Behavior on y {
+        enabled: root.animReady
+        NumberAnimation { duration: 300; easing.type: Easing.OutBack; easing.overshoot: 1.2 }
+    }
+    Behavior on width {
+        enabled: root.animReady
+        NumberAnimation { duration: 300; easing.type: Easing.OutBack; easing.overshoot: 1.2 }
+    }
 
-        Behavior on width {
-            enabled: root.animReady
-            NumberAnimation { duration: 300; easing.type: Easing.OutBack; easing.overshoot: 1.3 }
+    opacity: ghosted ? 0 : 1
+    Behavior on opacity { NumberAnimation { duration: 100 } }
+
+    // Fundo tonal liso, sem borda. Clareia no hover e escurece no press.
+    color: mArea.pressed
+        ? Colors.surface
+        : (mArea.containsMouse ? Qt.lighter(Colors.surface, 1.9) : Colors.surface)
+
+    border.width: SystemPanelState.editMode ? 2 : 0
+    border.color: Colors.brightBlue
+    Behavior on border.width { NumberAnimation { duration: 150 } }
+
+    // Efeito Squish (esmaga no clique) e Float (cresce no hover)
+    radius: mArea.pressed ? 10 : (mArea.containsMouse ? 20 : 15)
+
+    Behavior on radius {
+        NumberAnimation { duration: 250; easing.type: Easing.OutBack; easing.overshoot: 0.5 }
+    }
+
+    Behavior on color {
+        ColorAnimation { duration: 150 }
+    }
+
+    // ---------------- ripple (M3 Expressive) ----------------
+    // Inspirado no RippleButton do nandoroid-shell, mas via Canvas em
+    // vez de Qt5Compat.GraphicalEffects (OpacityMask+RadialGradient) —
+    // assim nao precisa instalar um modulo novo. O recorte de cantos
+    // arredondados e' feito na mao (ctx.clip() num path arredondado
+    // desenhado com arcTo, a mesma tecnica ja usada na alca de resize),
+    // nao com uma mascara separada.
+    Canvas {
+        id: rippleCanvas
+        anchors.fill: parent
+        z: 1
+
+        property real rippleX: 0
+        property real rippleY: 0
+        property real rippleRadius: 0
+        property real rippleAlpha: 0
+
+        onRippleRadiusChanged: requestPaint()
+        onRippleAlphaChanged: requestPaint()
+
+        function roundedRectPath(ctx, w, h, r) {
+            ctx.beginPath();
+            ctx.moveTo(r, 0);
+            ctx.arcTo(w, 0, w, h, r);
+            ctx.arcTo(w, h, 0, h, r);
+            ctx.arcTo(0, h, 0, 0, r);
+            ctx.arcTo(0, 0, w, 0, r);
+            ctx.closePath();
         }
-        Behavior on height {
-            enabled: root.animReady
-            NumberAnimation { duration: 300; easing.type: Easing.OutBack; easing.overshoot: 1.3 }
+
+        onPaint: {
+            const ctx = getContext("2d");
+            ctx.clearRect(0, 0, width, height);
+            if (rippleAlpha <= 0 || rippleRadius <= 0) return;
+
+            ctx.save();
+            // Raio fixo aproximado (nao acompanha o Behavior do radius
+            // do tile em tempo real) — simplificacao deliberada, o
+            // ripple e' rapido demais pra essa diferenca ser perceptivel.
+            roundedRectPath(ctx, width, height, 15);
+            ctx.clip();
+
+            const grad = ctx.createRadialGradient(
+                rippleX, rippleY, 0,
+                rippleX, rippleY, rippleRadius
+            );
+            grad.addColorStop(0, Qt.rgba(Colors.fg.r, Colors.fg.g, Colors.fg.b, rippleAlpha * 0.30));
+            grad.addColorStop(1, Qt.rgba(Colors.fg.r, Colors.fg.g, Colors.fg.b, 0));
+            ctx.fillStyle = grad;
+            ctx.fillRect(0, 0, width, height);
+            ctx.restore();
         }
 
-        opacity: root.ghosted ? 0 : 1
-        Behavior on opacity { NumberAnimation { duration: 100 } }
-
-        // Fundo tonal liso, sem borda. Clareia no hover e escurece no press.
-        color: mArea.pressed
-            ? Colors.surface
-            : (mArea.containsMouse ? Qt.lighter(Colors.surface, 1.9) : Colors.surface)
-
-        border.width: SystemPanelState.editMode ? 2 : 0
-        border.color: Colors.brightBlue
-        Behavior on border.width { NumberAnimation { duration: 150 } }
-
-        // Efeito Squish (esmaga no clique) e Float (cresce no hover)
-        radius: mArea.pressed ? 10 : (mArea.containsMouse ? 20 : 15)
-
-        Behavior on radius {
-            NumberAnimation { duration: 250; easing.type: Easing.OutBack; easing.overshoot: 0.5 }
+        NumberAnimation {
+            id: rippleExpand
+            target: rippleCanvas
+            property: "rippleRadius"
+            from: 0
+            duration: 450
+            easing.type: Easing.OutCubic
         }
-
-        Behavior on color {
-            ColorAnimation { duration: 150 }
+        NumberAnimation {
+            id: rippleFade
+            target: rippleCanvas
+            property: "rippleAlpha"
+            from: 1
+            to: 0
+            duration: 550
+            easing.type: Easing.InCubic
         }
     }
 
@@ -128,6 +199,20 @@ Item {
         // No modo de edicao o clique principal nao executa nada — so'
         // os controles de edicao (✕ / setas / arrastar) respondem.
         enabled: !SystemPanelState.editMode
+
+        onPressed: mouse => {
+            const maxDist = Math.max(
+                Math.hypot(mouse.x, mouse.y),
+                Math.hypot(width - mouse.x, mouse.y),
+                Math.hypot(mouse.x, height - mouse.y),
+                Math.hypot(width - mouse.x, height - mouse.y)
+            );
+            rippleCanvas.rippleX = mouse.x;
+            rippleCanvas.rippleY = mouse.y;
+            rippleExpand.to = maxDist;
+            rippleExpand.restart();
+            rippleFade.restart();
+        }
 
         onClicked: {
             if (root.cmd === "__CLOSE__") {
@@ -198,7 +283,8 @@ Item {
     // Redimensionar: alca no canto inferior-direito (igual o Android),
     // desenhada como uma quina grossa. Arrastar acumula distancia e
     // "engata" um degrau de tamanho a cada ~40px — cresce/encolhe SEM
-    // voltar pro inicio ao passar do limite (testado em Python).
+    // voltar pro inicio ao passar do limite (testado em Python). So'
+    // largura agora (1x1 <-> 2x1) — sem "altura" nesse sistema.
     Item {
         id: resizeHandle
         visible: SystemPanelState.editMode
@@ -229,43 +315,35 @@ Item {
             id: resizeArea
             anchors.fill: parent
             anchors.margins: -8
-            cursorShape: Qt.SizeFDiagCursor
+            cursorShape: Qt.SizeHorCursor
             preventStealing: true
 
             property real accumDx: 0
-            property real accumDy: 0
             // Coordenada GLOBAL (tela), nao local — a local se move junto
             // com a propria alca quando o tile cresce/encolhe no meio do
             // gesto, o que corrompia a distancia acumulada (o cursor
             // "descolava" do painel). Global e' um referencial fixo,
-            // imune a isso, mesmo padrao ja usado no drag-and-drop.
+            // imune a isso.
             property real lastGlobalX: 0
-            property real lastGlobalY: 0
             readonly property real stepPx: 40
 
             onPressed: mouse => {
                 accumDx = 0;
-                accumDy = 0;
                 const g = mapToGlobal(mouse.x, mouse.y);
                 lastGlobalX = g.x;
-                lastGlobalY = g.y;
             }
 
             onPositionChanged: mouse => {
                 const g = mapToGlobal(mouse.x, mouse.y);
                 accumDx += (g.x - lastGlobalX);
-                accumDy += (g.y - lastGlobalY);
                 lastGlobalX = g.x;
-                lastGlobalY = g.y;
 
-                if (accumDx > stepPx || accumDy > stepPx) {
+                if (accumDx > stepPx) {
                     SystemPanelState.growSize(root.moduleId);
                     accumDx = 0;
-                    accumDy = 0;
-                } else if (accumDx < -stepPx || accumDy < -stepPx) {
+                } else if (accumDx < -stepPx) {
                     SystemPanelState.shrinkSize(root.moduleId);
                     accumDx = 0;
-                    accumDy = 0;
                 }
             }
         }

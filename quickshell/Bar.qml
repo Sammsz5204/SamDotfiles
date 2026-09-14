@@ -3,11 +3,13 @@ import Quickshell.Wayland
 import Quickshell.Io
 import QtQuick
 import QtQuick.Layouts
-
+    
 PanelWindow {
     id: bar
 
     required property var modelData
+
+    
     screen: modelData
 
     anchors {
@@ -37,9 +39,9 @@ PanelWindow {
         onFinished: barEnterAnim.start()
     }
 
-// --- NOSSO TRUQUE DE IPC INFALÍVEL ---
-    // Ele fica escutando o arquivo sem gastar processamento. 
-    // Quando recebe um sinal, abre o Launcher e já volta a escutar.
+
+    // Ele fica escutando o arquivo sem gastar  tanto processamento. 
+
     Process {
         id: shortcutListener
         command: ["bash", "-c", "if [ ! -p /tmp/qs_toggle ]; then mkfifo /tmp/qs_toggle; fi; cat /tmp/qs_toggle"]
@@ -138,37 +140,6 @@ PanelWindow {
 
             spacing: 6
 
-
-            MorphingStat {
-                Layout.alignment: Qt.AlignVCenter
-                icon: "" // Ícone pro processador
-                hoverName: "CPU"
-                command: [
-                    "bash",
-                    "-c",
-                    "top -bn1 | grep 'Cpu(s)' | awk '{print $2}' | cut -d'%' -f1 | cut -d'.' -f1"
-                ] 
-                suffix: "%" 
-                intervalMs: 2000 
-
-                onClicked: Quickshell.execDetached([
-                    "kitty",
-                    "-e",
-                    "btop --force-utf"
-                ]) 
-            }
-
-            MorphingStat {
-                Layout.alignment: Qt.AlignVCenter
-                icon: "󰘚" // Ícone pra memória
-                hoverName: "RAM"
-                command: [
-                    "bash",
-                    "-c",
-                    "free -b | awk '/Mem:/ {printf \"%.1fG/%.1fG\", $3/1073741824, $2/1073741824}'"
-                ] 
-                intervalMs: 5000 
-            }
 
             TrayModule {
                 Layout.alignment: Qt.AlignVCenter

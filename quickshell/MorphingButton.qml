@@ -26,8 +26,7 @@ Item {
     Rectangle {
         anchors.fill: parent
         
-        // Morphing triplo: 13 (Repouso) -> 8 (Hover/Pílula) -> 14 (Pressionado/Bolha)
-        radius: isPressed ? 17 : (isExpanded ? 11 : 16)
+        radius: isPressed ? 8 : (isExpanded ? 19 : 19)
         color: isExpanded || isPressed ? Colors.surface : "transparent"
 
         Behavior on radius {
@@ -77,14 +76,6 @@ Item {
         }
     }
 
-    SequentialAnimation {
-        id: squishAnimation
-        NumberAnimation { target: root; property: "scale"; to: 0.95; duration: 100; easing.type: Easing.OutCubic }
-        NumberAnimation { target: root; property: "scale"; to: 1.01; duration: 100; easing.type: Easing.OutBack; easing.overshoot: 0.5 }
-        NumberAnimation { target: root; property: "scale"; to: 1; duration: 170; easing.type: Easing.OutCubic }
-    }
-
-    onPressTokenChanged: squishAnimation.restart()
 
     MouseArea {
         id: mouseArea
