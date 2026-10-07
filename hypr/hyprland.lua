@@ -37,6 +37,7 @@ hl.on("hyprland.start", function()
 	hl.exec_cmd("sleep 2 && qs")
 	hl.exec_cmd("bash /home/sam/.config/scripts/monitor_wall.sh")
 	hl.exec_cmd("/usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1")
+	hl.exec_cmd("mpd-discord-rpc")
 end)
 
 -------------------------------
@@ -270,6 +271,9 @@ end
 -- PrintScreen(Select Area)
 
 hl.bind(mainMod .. " + SHIFT + S", hl.dsp.exec_cmd('grim -g "$(slurp)"'))
+
+-- EmojiScreen
+hl.bind(mainMod .. " + O", hl.dsp.exec_cmd("quickshell -p ~/.config/quickshell/ ipc call emoji toggle"))
 
 -- Example special workspace (scratchpad)
 hl.bind(mainMod .. " + S", hl.dsp.workspace.toggle_special("magic"))

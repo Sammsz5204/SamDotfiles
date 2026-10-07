@@ -14,7 +14,32 @@ PopupWindow {
     implicitHeight: 520
 
     color: "transparent"
-    visible: false
+
+    // ---------------- abrir/fechar com animacao de verdade ----------------
+    // "visible" numa PopupWindow desmonta a superficie NA HORA — sem
+    // frame de transicao. O "visible: root.visible ? 1.0 : 0.82" que
+    // existia no cardContainer nunca teve tempo de animar a saida de
+    // verdade, porque a janela ja tinha sumido antes do primeiro frame.
+    // Mesmo fix aplicado no SystemPanelPopup: o exterior (Bar.qml)
+    // escreve em "requestedVisible", e "closing" segura a janela viva
+    // so' durante o tempo da animacao de saida.
+    property bool requestedVisible: false
+    property bool closing: false
+    visible: requestedVisible || closing
+
+    onRequestedVisibleChanged: {
+        if (requestedVisible) {
+            closing = false;
+            exitAnim.stop();
+            enterAnim.start();
+            searchInput.text = "";
+            searchInput.forceActiveFocus();
+        } else {
+            closing = true;
+            enterAnim.stop();
+            exitAnim.start();
+        }
+    }
 
     property var allApps: []
     property var filteredApps: []
@@ -93,22 +118,40 @@ PopupWindow {
         // --- ANIMAÇÃO DE EXPANSÃO DO VÍDEO (M3E DROPDOWN) ---
         transformOrigin: Item.TopLeft
 
-        scale: root.visible ? 1.0 : 0.82
-        opacity: root.visible ? 1.0 : 0.0
+        scale: 0.82
+        opacity: 0.0
 
-        Behavior on scale {
+        ParallelAnimation {
+            id: enterAnim
+            SpringAnimation {
+                target: cardContainer; property: "scale"; to: 1.0
+                spring: Motion.spatialDefault.spring
+                damping: Motion.spatialDefault.damping
+                mass: Motion.spatialDefault.mass
+            }
             NumberAnimation {
-                duration: 320
-                easing.type: Easing.OutBack
-                easing.overshoot: 1.4 // Mola idêntica ao vídeo do M3E
+                target: cardContainer; property: "opacity"; to: 1.0
+                duration: Motion.effectsDefault
+                easing.type: Motion.effectsEasing
             }
         }
 
-        Behavior on opacity {
-            NumberAnimation {
-                duration: 200
-                easing.type: Easing.OutCubic
+        ParallelAnimation {
+            id: exitAnim
+            SpringAnimation {
+                target: cardContainer; property: "scale"; to: 0.82
+                spring: Motion.spatialFast.spring
+                damping: Motion.spatialFast.damping
+                mass: Motion.spatialFast.mass
             }
+            NumberAnimation {
+                target: cardContainer; property: "opacity"; to: 0.0
+                duration: Motion.effectsFast
+                easing.type: Motion.effectsEasing
+            }
+            // So' agora, com a animacao ja terminada na tela, e' seguro
+            // deixar "visible" cair pra false de verdade.
+            onFinished: root.closing = false
         }
 
         ColumnLayout {
@@ -155,7 +198,7 @@ PopupWindow {
                         font.pixelSize: 14
                         background: null
 
-                        Keys.onEscapePressed: root.visible = false
+                        Keys.onEscapePressed: root.requestedVisible = false
 
                         onTextChanged: root.updateFilter()
 
@@ -163,7 +206,7 @@ PopupWindow {
                             if (root.filteredApps.length > 0) {
                                 var firstApp = root.filteredApps[0];
                                 Quickshell.execDetached(["bash", "-c", firstApp.exec + " &"]);
-                                root.visible = false;
+                                root.requestedVisible = false;
                             }
                         }
                     }
@@ -285,18 +328,11 @@ PopupWindow {
 
                         onClicked: {
                             Quickshell.execDetached(["bash", "-c", appCard.appData.exec + " &"]);
-                            root.visible = false;
+                            root.requestedVisible = false;
                         }
                     }
                 }
             }
-        }
-    }
-
-    onVisibleChanged: {
-        if (visible) {
-            searchInput.text = ""
-            searchInput.forceActiveFocus()
         }
     }
 }

@@ -31,7 +31,11 @@ PanelWindow {
     exclusionMode: ExclusionMode.Auto
     WlrLayershell.layer: WlrLayer.Top
 
-    WlrLayershell.keyboardFocus: launcherPanel.visible ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
+    // Nota: "requestedVisible" (nao "visible") — o popup so' desmonta a
+    // superficie de verdade depois que a animacao de saida termina
+    // (ver LauncherPopup.qml/SystemPanelPopup.qml). Usar "visible" aqui
+    // voltaria a cortar a animacao de saida pela metade.
+    WlrLayershell.keyboardFocus: launcherPanel.requestedVisible ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
 
     // Startup animation handler
     StartupSplash {
@@ -48,7 +52,7 @@ PanelWindow {
         running: true
         stdout: StdioCollector {
             onStreamFinished: {
-                launcherPanel.visible = !launcherPanel.visible
+                launcherPanel.requestedVisible = !launcherPanel.requestedVisible
                 restartTimer.start()
             }
         }
@@ -92,13 +96,17 @@ PanelWindow {
 
             MorphingButton {
                   Layout.alignment: Qt.AlignVCenter
-                  icon: ""
+                  icon: ""
                   text: "Apps"
     
-                  onClicked: launcherPanel.visible = !launcherPanel.visible
+                  onClicked: launcherPanel.requestedVisible = !launcherPanel.requestedVisible
               }
 
             IdleInhibitor {
+            }
+
+            Resources {
+                Layout.alignment: Qt.AlignVCenter
             }
 
             Volume {
@@ -151,7 +159,7 @@ PanelWindow {
                 text: "System"
                 
                 onClicked: {
-                    systemPanel.visible = !systemPanel.visible
+                    systemPanel.requestedVisible = !systemPanel.requestedVisible
                 }
             }
         }

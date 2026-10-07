@@ -1,5 +1,8 @@
 // ============================================================
 // MorphingButton.qml — Atualizado com Morphing no Clique
+//
+// Radius on press/release migrado pros tokens do Motion.qml:
+// descida rápida sem mola, subida com overshoot (M3 Expressive).
 // ============================================================
 import QtQuick
 import QtQuick.Controls
@@ -24,16 +27,44 @@ Item {
     }
 
     Rectangle {
+        id: bgRect
         anchors.fill: parent
-        
-        radius: isPressed ? 8 : (isExpanded ? 19 : 19)
+
+        readonly property real restRadius: 19
+        // restRadius (19) > height/2 (13) — ja' satura em pilula completa
+        // no repouso. Usa o helper clamped pra calcular o press em cima
+        // do raio VISUAL (13), senao a proporcao normal (19 * 0.67 ≈ 12.7)
+        // fica acima do teto visual e a animacao nao aparece na tela.
+        readonly property real pressedRadius: Motion.pressedRadiusClamped(restRadius, root.height)
+
+        radius: restRadius
         color: isExpanded || isPressed ? Colors.surface : "transparent"
 
-        Behavior on radius {
-            NumberAnimation { duration: 250; easing.type: Easing.OutCubic }
-        }
         Behavior on color {
-            ColorAnimation { duration: 200; easing.type: Easing.OutCubic }
+            ColorAnimation { duration: Motion.hoverDuration; easing.type: Motion.hoverEasingType }
+        }
+
+        // radius e' "spatial" -> mola de verdade (ver Motion.qml).
+        // Descida (press): mola mais rigida/rapida.
+        SpringAnimation {
+            id: pressAnim
+            target: bgRect
+            property: "radius"
+            to: bgRect.pressedRadius
+            spring: Motion.spatialFast.spring
+            damping: Motion.spatialFast.damping
+            mass: Motion.spatialFast.mass
+        }
+
+        // Subida (release): mola default — "assenta" com overshoot visivel.
+        SpringAnimation {
+            id: releaseAnim
+            target: bgRect
+            property: "radius"
+            to: bgRect.restRadius
+            spring: Motion.spatialDefault.spring
+            damping: Motion.spatialDefault.damping
+            mass: Motion.spatialDefault.mass
         }
     }
 
@@ -83,6 +114,10 @@ Item {
         hoverEnabled: true
         cursorShape: Qt.PointingHandCursor
         
+        onPressed: { releaseAnim.stop(); pressAnim.restart() }
+        onReleased: { pressAnim.stop(); releaseAnim.restart() }
+        onCanceled: { pressAnim.stop(); releaseAnim.restart() }
+
         onClicked: {
             root.pressToken++
             root.clicked()

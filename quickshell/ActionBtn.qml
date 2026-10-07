@@ -19,6 +19,17 @@ import Quickshell
 // So' 1x1/2x1 agora (largura, nunca altura) — igual o Quick Settings
 // do Android de verdade, e o que permite esse posicionamento simples
 // (altura sempre igual pra todo mundo).
+//
+// Radius (M3 Expressive, via Motion.qml): migrado de uma Behavior
+// simetrica unica pra curva assimetrica — descida (press) rapida sem
+// mola, subida (release) com overshoot. A transicao de HOVER (nao e'
+// gesto de toque) continua suave e simetrica, so' que agora tambem
+// via token (Motion.hoverDuration). Como radius passou a ser
+// controlado por NumberAnimation imperativa, nao pode mais ter um
+// binding declarativo (`radius: cond ? a : b`) — os dois brigariam
+// pela mesma propriedade. Por isso os handlers de hover/press/release
+// abaixo escrevem o "to" e disparam a animacao certa na mao, em vez
+// de deixar um binding decidir sozinho.
 // ============================================================
 Rectangle {
     id: root
@@ -81,11 +92,37 @@ Rectangle {
     border.color: Colors.brightBlue
     Behavior on border.width { NumberAnimation { duration: 150 } }
 
-    // Efeito Squish (esmaga no clique) e Float (cresce no hover)
-    radius: mArea.pressed ? 10 : (mArea.containsMouse ? 20 : 15)
+    // ---------------- radius (M3 Expressive via Motion.qml) ----------------
+    readonly property real restRadius: 15
+    readonly property real hoverRadius: Motion.hoverRadius(restRadius)     // ~20
+    readonly property real pressedRadius: Motion.pressedRadius(restRadius) // ~10
 
-    Behavior on radius {
-        NumberAnimation { duration: 250; easing.type: Easing.OutBack; easing.overshoot: 0.5 }
+    radius: restRadius // valor inicial; a partir daqui quem escreve sao as SpringAnimation abaixo
+
+    // radius e' "spatial" (M3 Expressive) -> mola de verdade, nao
+    // duration+easing fingindo overshoot. Press mais rigido/rapido
+    // (spatialFast); release e hover com a mola default (mais visivel,
+    // "assenta" devagar) — ver Motion.qml pra tabela completa.
+    SpringAnimation {
+        id: pressAnim
+        target: root; property: "radius"; to: root.pressedRadius
+        spring: Motion.spatialFast.spring
+        damping: Motion.spatialFast.damping
+        mass: Motion.spatialFast.mass
+    }
+    SpringAnimation {
+        id: releaseAnim
+        target: root; property: "radius"
+        spring: Motion.spatialDefault.spring
+        damping: Motion.spatialDefault.damping
+        mass: Motion.spatialDefault.mass
+    }
+    SpringAnimation {
+        id: hoverAnim
+        target: root; property: "radius"
+        spring: Motion.spatialDefault.spring
+        damping: Motion.spatialDefault.damping
+        mass: Motion.spatialDefault.mass
     }
 
     Behavior on color {
@@ -212,6 +249,36 @@ Rectangle {
             rippleExpand.to = maxDist;
             rippleExpand.restart();
             rippleFade.restart();
+
+            hoverAnim.stop();
+            releaseAnim.stop();
+            pressAnim.restart();
+        }
+
+        onReleased: {
+            pressAnim.stop();
+            releaseAnim.to = mArea.containsMouse ? root.hoverRadius : root.restRadius;
+            releaseAnim.restart();
+        }
+
+        onCanceled: {
+            pressAnim.stop();
+            releaseAnim.to = mArea.containsMouse ? root.hoverRadius : root.restRadius;
+            releaseAnim.restart();
+        }
+
+        onEntered: {
+            if (mArea.pressed) return;
+            releaseAnim.stop();
+            hoverAnim.to = root.hoverRadius;
+            hoverAnim.restart();
+        }
+
+        onExited: {
+            if (mArea.pressed) return;
+            releaseAnim.stop();
+            hoverAnim.to = root.restRadius;
+            hoverAnim.restart();
         }
 
         onClicked: {

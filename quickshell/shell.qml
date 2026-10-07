@@ -3,6 +3,12 @@
 // conectado (equivalente ao "output": ["HDMI-A-3","VGA-1"] do waybar,
 // so que reativo — nao precisa listar nome de monitor na mao).
 // Padrao confirmado na doc oficial: Scope + Variants + PanelWindow.
+//
+// VolumeOsd segue o MESMO padrao — uma instancia por monitor, so' que
+// ela mesma controla a propria visibilidade (aparece deslizando da
+// borda inferior quando o volume muda, some sozinha depois). Nao
+// precisa de nenhum fio ligando ela em outra coisa — ela poll o wpctl
+// por conta propria.
 // ============================================================
 import Quickshell
 import Quickshell.Io
@@ -17,6 +23,32 @@ Scope {
 
         Bar {
             modelData: modelData
+        }
+    }
+
+    Variants {
+        model: Quickshell.screens
+
+        VolumeOsd {
+            screenTarget: modelData
+        }
+    }
+
+    Variants {
+        model: Quickshell.screens
+
+        EmojiPicker {
+            screenTarget: modelData
+        }
+    }
+
+    // Atalho no hyprland.lua: hl.bind({ ..., action = "exec",
+    // command = "quickshell -p ~/.config/quickshell/ ipc call emoji toggle" })
+    IpcHandler {
+        target: "emoji"
+
+        function toggle(): void {
+            EmojiPickerState.toggle();
         }
     }
 

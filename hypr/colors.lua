@@ -1,8 +1,8 @@
 return {
-    bg       = "030303",
+    bg       = "333A53",
     fg       = "e2dacf",
-    accent1  = "030303",
-    accent2  = "B7C1CC",
-    accent3  = "353236",
-    inactive = "5b5b5b",
+    accent1  = "477388",
+    accent2  = "B59B78",
+    accent3  = "DAD9E3",
+    inactive = "7a7e8f",
 }

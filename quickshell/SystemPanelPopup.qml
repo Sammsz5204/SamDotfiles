@@ -27,18 +27,33 @@ PopupWindow {
     id: root
 
     implicitWidth: 380
-    implicitHeight: 600
+    implicitHeight: 420
 
     color: "transparent"
-    visible: false
 
-    property real cpuPct: 0
-    property real ramPct: 0
-    property real diskPct: 0
+    // ---------------- abrir/fechar com animacao de verdade ----------------
+    // "visible" numa PopupWindow desmonta a superficie NA HORA — sem
+    // frame de transicao. Se o exterior (Bar.qml) escrevesse direto em
+    // "visible", a animacao de saida do cardBg nunca teria tempo de
+    // rodar (a janela ja teria sumido antes do primeiro frame). Por
+    // isso o exterior agora escreve em "requestedVisible", e a janela
+    // so' desaparece de verdade DEPOIS que exitAnim termina — "closing"
+    // segura ela viva so' durante esse intervalo.
+    property bool requestedVisible: false
+    property bool closing: false
+    visible: requestedVisible || closing
 
-    property string songTitle: "Nenhuma música"
-    property string songArtist: "Desconhecido"
-    property string songStatus: "Stopped"
+    onRequestedVisibleChanged: {
+        if (requestedVisible) {
+            closing = false;
+            exitAnim.stop();
+            enterAnim.start();
+        } else {
+            closing = true;
+            enterAnim.stop();
+            exitAnim.start();
+        }
+    }
 
     property string uptimeStr: "--"
     property string clockNow: Qt.formatDateTime(sysClock.date, "hh:mm")
@@ -150,43 +165,7 @@ PopupWindow {
         precision: SystemClock.Minutes
     }
 
-    // ---------- stats reais (mesmos comandos ja provados no Bar/eww antigo) ----------
-    Process {
-        id: cpuProc
-        command: ["bash", "-c", "top -bn1 | grep 'Cpu(s)' | awk '{print $2}' | cut -d'%' -f1 | cut -d'.' -f1"]
-        running: false
-        stdout: StdioCollector {
-            onStreamFinished: {
-                const n = parseFloat(this.text.trim());
-                if (!isNaN(n)) root.cpuPct = n / 100;
-            }
-        }
-    }
-
-    Process {
-        id: ramProc
-        command: ["bash", "-c", "free | grep Mem | awk '{printf \"%.0f\", $3/$2 * 100}'"]
-        running: false
-        stdout: StdioCollector {
-            onStreamFinished: {
-                const n = parseFloat(this.text.trim());
-                if (!isNaN(n)) root.ramPct = n / 100;
-            }
-        }
-    }
-
-    Process {
-        id: diskProc
-        command: ["bash", "-c", "df -h / | awk 'NR==2 {print $5}' | sed 's/%//'"]
-        running: false
-        stdout: StdioCollector {
-            onStreamFinished: {
-                const n = parseFloat(this.text.trim());
-                if (!isNaN(n)) root.diskPct = n / 100;
-            }
-        }
-    }
-
+    // ---------- uptime (cpu/ram/disk mudaram pra Resources.qml, na Bar) ----------
     Process {
         id: uptimeProc
         command: ["bash", "-c", "uptime -p | sed 's/up //'"]
@@ -196,22 +175,12 @@ PopupWindow {
         }
     }
 
-    // cpu/ram sobem rapido, disco/uptime quase nao mudam — intervalos
-    // diferentes pra nao ficar chamando shell a toa
-    Timer {
-        interval: 2000
-        running: true
-        repeat: true
-        triggeredOnStart: true
-        onTriggered: { cpuProc.running = true; ramProc.running = true; }
-    }
-
     Timer {
         interval: 30000
         running: true
         repeat: true
         triggeredOnStart: true
-        onTriggered: { diskProc.running = true; uptimeProc.running = true; }
+        onTriggered: uptimeProc.running = true
     }
 
     Timer {
@@ -221,11 +190,55 @@ PopupWindow {
     }
 
     Rectangle {
+        id: cardBg
         anchors.fill: parent
         color: Colors.bg
         border.color: SystemPanelState.editMode ? Colors.brightBlue : Colors.surface
         border.width: 2
         radius: 19
+
+        // Nasce do canto superior-direito (e' onde o botao "System" que
+        // abre esse popup fica na Bar) — mesma logica do LauncherPopup,
+        // que nasce do canto superior-esquerdo por causa do botao "Apps".
+        transformOrigin: Item.TopRight
+        scale: 0.82
+        opacity: 0
+
+        ParallelAnimation {
+            id: enterAnim
+            // scale e' "spatial" -> mola de verdade (ver Motion.qml).
+            SpringAnimation {
+                target: cardBg; property: "scale"; to: 1.0
+                spring: Motion.spatialDefault.spring
+                damping: Motion.spatialDefault.damping
+                mass: Motion.spatialDefault.mass
+            }
+            // opacity e' "effects" -> duration+easing comum, sem mola
+            // e sem overshoot (overshoot em opacidade pisca, nao "mola").
+            NumberAnimation {
+                target: cardBg; property: "opacity"; to: 1.0
+                duration: Motion.effectsDefault
+                easing.type: Motion.effectsEasing
+            }
+        }
+
+        ParallelAnimation {
+            id: exitAnim
+            SpringAnimation {
+                target: cardBg; property: "scale"; to: 0.82
+                spring: Motion.spatialFast.spring
+                damping: Motion.spatialFast.damping
+                mass: Motion.spatialFast.mass
+            }
+            NumberAnimation {
+                target: cardBg; property: "opacity"; to: 0.0
+                duration: Motion.effectsFast
+                easing.type: Motion.effectsEasing
+            }
+            // So' agora, com a animacao ja terminada na tela, e' seguro
+            // deixar "visible" cair pra false de verdade.
+            onFinished: root.closing = false
+        }
 
         Behavior on border.color { ColorAnimation { duration: 200 } }
 
@@ -235,15 +248,16 @@ PopupWindow {
             anchors.bottom: parent.bottom
             anchors.left: parent.left
             anchors.right: parent.right
-            anchors.topMargin: 15
-            anchors.bottomMargin: 15
-            anchors.leftMargin: 15
-            // Margem direita maior de proposito: sobra um "corredor"
-            // vazio pra barra de rolagem fina viver, sem encostar nas
-            // alcas de resize que espetam ~4px pra fora de cada tile
-            // da coluna da direita (era ali que ficava dificil de
-            // pegar a alca antes).
-            anchors.rightMargin: 22
+            // Margem SIMETRICA nos 4 lados (mesmo padrao do
+            // QuickSettingsContent.qml do nandoroid-shell: "margins: 10
+            // * scale" igual nos quatro lados, sem corredor especial
+            // nenhum). O valor 19 >= radius do card externo (19), pra
+            // conteudo perto dos cantos nao invadir a curva da borda.
+            // A alca de resize dos tiles ja tem sua propria reserva de
+            // espaco (actionsArea.editControlsOverflow, mais abaixo),
+            // que e' independente disso — entao nao precisa mais de
+            // corredor extra so' na direita.
+            anchors.margins: 19
             clip: true
             ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
 
@@ -267,110 +281,6 @@ PopupWindow {
             ColumnLayout {
                 width: scrollView.availableWidth
                 spacing: 5
-
-            Rectangle {
-                Layout.fillWidth: true
-                Layout.preferredHeight: 120
-                color: Colors.surface
-                radius: 18
-
-                RowLayout {
-                    anchors.fill: parent
-                    anchors.margins: 16
-                    spacing: 15
-
-                    StatRing {
-                        icon: "󰻠"
-                        value: root.cpuPct
-                        label: "CPU"
-                        ringColor: Colors.blue
-                        Layout.fillWidth: true
-                    }
-
-                    StatRing {
-                        icon: "󰍛"
-                        value: root.ramPct
-                        label: "RAM"
-                        ringColor: Colors.green
-                        Layout.fillWidth: true
-                    }
-
-                    StatRing {
-                        icon: "󰋊"
-                        value: root.diskPct
-                        label: "DISK"
-                        ringColor: Colors.yellow
-                        Layout.fillWidth: true
-                    }
-                }
-            }
-
-            Rectangle {
-                Layout.fillWidth: true
-                Layout.preferredHeight: 62
-                color: Colors.surface
-                radius: 18
-
-                RowLayout {
-                    anchors.fill: parent
-                    anchors.margins: 12
-                    spacing: 26
-
-                    Rectangle {
-                        width: 38
-                        height: 38
-                        radius: 14
-                        color: Colors.bg
-
-                        Text {
-                            anchors.centerIn: parent
-                            text: "󰝚"
-                            color: Colors.blue
-                            font.pixelSize: 18
-                        }
-                    }
-
-                    ColumnLayout {
-                        Layout.fillWidth: true
-                        spacing: 2
-
-                        Text {
-                            text: root.songTitle
-                            color: Colors.fg
-                            font.pixelSize: 11
-                            font.bold: true
-                            elide: Text.ElideRight
-                        }
-
-                        Text {
-                            text: root.songArtist
-                            color: Colors.muted
-                            font.pixelSize: 10
-                            font.weight: Font.Medium
-                            elide: Text.ElideRight
-                        }
-                    }
-
-                    RowLayout {
-                        spacing: 12
-
-                        MediaButton {
-                            iconText: "󰒮"
-                            onClicked: Quickshell.execDetached(["playerctl", "previous"])
-                        }
-
-                        MediaButton {
-                            iconText: root.songStatus === "Playing" ? "󰏤" : "󰐊"
-                            onClicked: Quickshell.execDetached(["playerctl", "play-pause"])
-                        }
-
-                        MediaButton {
-                            iconText: "󰒭"
-                            onClicked: Quickshell.execDetached(["playerctl", "next"])
-                        }
-                    }
-                }
-            }
 
             // ---------------- cabecalho: titulo + botao de editar ----------------
             RowLayout {
@@ -431,8 +341,20 @@ PopupWindow {
                     : 0
 
                 readonly property real itemSpacing: 10
+                // Reserva uma folga fixa pro X badge (anchors.margins:-6)
+                // e a alca de resize (anchors.margins:-4) da ULTIMA COLUNA
+                // — esses controles do modo de edicao ficam DE PROPOSITO
+                // pra fora do proprio tile, e pra tiles da ultima coluna
+                // isso sai da area do grid. O corredor externo
+                // (ScrollView.rightMargin: 26) NAO ajuda aqui: ele fica
+                // FORA do ScrollView, e o ScrollView tem clip:true — o
+                // corte acontece ANTES da folga externa entrar em jogo.
+                // Por isso a folga precisa vir de DENTRO da largura do
+                // proprio grid (reduzindo unitWidth pra todas as colunas
+                // igualmente), nao de fora.
+                readonly property real editControlsOverflow: 8
                 readonly property real unitWidth:
-                    (width - itemSpacing * (SystemPanelState.gridColumns - 1)) / SystemPanelState.gridColumns
+                    (width - editControlsOverflow - itemSpacing * (SystemPanelState.gridColumns - 1)) / SystemPanelState.gridColumns
 
                 Repeater {
                     id: actionsRepeater
@@ -468,7 +390,7 @@ PopupWindow {
                             ? actionsArea.unitWidth * 2 + actionsArea.itemSpacing
                             : actionsArea.unitWidth
 
-                        onCloseRequested: root.visible = false
+                        onCloseRequested: root.requestedVisible = false
                         onDragStarted: (mid, gx, gy) => root.beginDrag(mid, gx, gy)
                         onDragMoved: (gx, gy) => root.updateDrag(gx, gy)
                         onDragEnded: root.endDrag()

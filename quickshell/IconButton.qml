@@ -1,7 +1,10 @@
 // ============================================================
-// IconButton.qml — icone clicavel simples, com hover (equivalente ao
-// #custom-launcher / #custom-system-panel do style.css: cinza parado,
-// vira @fg + fundo @surface no hover).
+// IconButton.qml — icone clicavel simples, com hover.
+//
+// Convertido do scale-bounce antigo (squishAnimation no item
+// inteiro, disparado so' no onClicked) pro mesmo padrao de radius
+// on press/release dos outros botoes, via Motion.qml — so' o raio
+// muda, sem escalar o item (M3 real e' mais sutil que isso).
 // ============================================================
 import QtQuick
 import QtQuick.Controls
@@ -15,18 +18,34 @@ Item {
     implicitWidth: label.implicitWidth + 16
     implicitHeight: 26
 
-    property int pressToken: 0
+    readonly property real restRadius: 13
+    readonly property real pressedRadius: Motion.pressedRadius(restRadius)
 
     Rectangle {
+        id: bgRect
         anchors.fill: parent
-        radius: 13
+        radius: root.restRadius // valor inicial; a partir daqui quem escreve sao as SpringAnimation abaixo
         color: mouseArea.containsMouse ? Colors.surface : "transparent"
 
         Behavior on color {
-            ColorAnimation {
-                duration: 150
-                easing.type: Easing.OutCubic
-            }
+            ColorAnimation { duration: Motion.hoverDuration; easing.type: Motion.hoverEasingType }
+        }
+
+        // radius e' "spatial" -> mola de verdade (ver Motion.qml).
+        SpringAnimation {
+            id: pressAnim
+            target: bgRect; property: "radius"; to: root.pressedRadius
+            spring: Motion.spatialFast.spring
+            damping: Motion.spatialFast.damping
+            mass: Motion.spatialFast.mass
+        }
+
+        SpringAnimation {
+            id: releaseAnim
+            target: bgRect; property: "radius"; to: root.restRadius
+            spring: Motion.spatialDefault.spring
+            damping: Motion.spatialDefault.damping
+            mass: Motion.spatialDefault.mass
         }
     }
 
@@ -39,54 +58,21 @@ Item {
         color: mouseArea.containsMouse ? Colors.fg : Colors.muted
 
         Behavior on color {
-            ColorAnimation {
-                duration: 150
-                easing.type: Easing.OutCubic
-            }
+            ColorAnimation { duration: Motion.hoverDuration; easing.type: Motion.hoverEasingType }
         }
     }
-
-    SequentialAnimation {
-        id: squishAnimation
-
-        NumberAnimation {
-            target: root
-            property: "scale"
-            to: 0.95
-            duration: 100
-            easing.type: Easing.OutCubic
-        }
-
-        NumberAnimation {
-            target: root
-            property: "scale"
-            to: 1.03
-            duration: 160
-            easing.type: Easing.OutBack
-            easing.overshoot: 0.5
-        }
-
-        NumberAnimation {
-            target: root
-            property: "scale"
-            to: 1
-            duration: 220
-            easing.type: Easing.OutCubic
-        }
-    }
-
-    onPressTokenChanged: squishAnimation.restart()
 
     MouseArea {
-    id: mouseArea
+        id: mouseArea
 
-    anchors.fill: parent
-    hoverEnabled: true
-    cursorShape: Qt.PointingHandCursor
+        anchors.fill: parent
+        hoverEnabled: true
+        cursorShape: Qt.PointingHandCursor
 
-    onClicked: {
-        root.pressToken++
-        root.clicked()
+        onPressed: { releaseAnim.stop(); pressAnim.restart() }
+        onReleased: { pressAnim.stop(); releaseAnim.restart() }
+        onCanceled: { pressAnim.stop(); releaseAnim.restart() }
+
+        onClicked: root.clicked()
     }
-}
 }
